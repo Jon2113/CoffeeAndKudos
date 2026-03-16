@@ -14,7 +14,7 @@ if (app.Environment.IsDevelopment())
     app.MapOpenApi();
 }
 
-app.UseHttpsRedirection();
+// SEE LECTURE EXCLUDE: app.UseHttpsRedirection();
 
 app.UseAuthorization();
 
