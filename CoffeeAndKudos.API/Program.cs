@@ -11,7 +11,9 @@ builder.Services.AddOpenApi();
 
 
 //added from the lecture
+builder.Services.AddScoped<UserRepository, UserRepository>();
 builder.Services.AddScoped<BorrowsRepository, BorrowsRepository>();
+builder.Services.AddScoped<FavorsRepository, FavorsRepository>();
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
