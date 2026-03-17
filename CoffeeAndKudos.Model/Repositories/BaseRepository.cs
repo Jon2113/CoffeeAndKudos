@@ -16,4 +16,25 @@ public class BaseRepository
         conn.Open();
         return cmd.ExecuteReader();
     }
+
+    protected bool InsertData(NpgsqlConnection conn, NpgsqlCommand cmd)
+    {
+        conn.Open();
+        cmd.ExecuteNonQuery();
+        return true;
+    }
+
+    protected bool UpdateData(NpgsqlConnection conn, NpgsqlCommand cmd)
+    {
+        conn.Open();
+        cmd.ExecuteNonQuery();
+        return true;
+    }
+
+    protected bool DeleteData(NpgsqlConnection conn, NpgsqlCommand cmd)
+    {
+        conn.Open();
+        cmd.ExecuteNonQuery();
+        return true;
+    }
 }

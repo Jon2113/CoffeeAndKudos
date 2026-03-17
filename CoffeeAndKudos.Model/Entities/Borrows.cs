@@ -6,16 +6,16 @@ public class Borrow
     {
     }
 
-    public Borrow(Guid id)
+    public Borrow(Guid borrowId)
     {
-        Id = id;
+        BorrowId = borrowId;
     }
 
-    public Guid Id { get; set; } = Guid.NewGuid();
-    public string ItemName { get; set; } = string.Empty;
-    public DateTime DueDate { get; set; }
-    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
-    public DateTime? ReturnedAt { get; set; }
+    public Guid BorrowId { get; set; } = Guid.NewGuid();
     public Guid LenderId { get; set; }
     public Guid BorrowerId { get; set; }
+    public string ItemName { get; set; } = string.Empty;
+    public DateOnly? DueDate { get; set; }
+    public DateTime? ReturnedAt { get; set; }
+    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 }

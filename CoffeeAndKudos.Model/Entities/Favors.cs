@@ -6,15 +6,15 @@ public class Favor
     {
     }
 
-    public Favor(Guid id)
+    public Favor(Guid favorId)
     {
-        Id = id;
+        FavorId = favorId;
     }
 
-    public Guid Id { get; set; } = Guid.NewGuid();
+    public Guid FavorId { get; set; } = Guid.NewGuid();
+    public Guid DebtorId { get; set; }
+    public Guid CreditorId { get; set; }
     public string Description { get; set; } = string.Empty;
     public bool IsSettled { get; set; }
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
-    public Guid CreditorId { get; set; }
-    public Guid DebtorId { get; set; }
 }
