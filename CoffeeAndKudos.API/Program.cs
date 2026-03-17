@@ -1,4 +1,5 @@
 using CoffeeAndKudos.Model.Repositories;
+using Microsoft.OpenApi.Models;
 
 
 var builder = WebApplication.CreateBuilder(args);
@@ -8,7 +9,15 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllers();
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
+builder.Services.AddSwaggerGen(options =>
+{
+    //dein Modell enthält DateOnly? DueDate, und genau dieser Typ ist in Swashbuckle mehrfach als Swagger-Problem dokumentiert. Ich ergänze deshalb die Swagger-Konfiguration so, dass DateOnly explizit als string mit date-Format beschrieben wird.
+    options.MapType<DateOnly>(() => new OpenApiSchema
+    {
+        Type = "string",
+        Format = "date"
+    });
+});
 
 
 //added from the lecture
