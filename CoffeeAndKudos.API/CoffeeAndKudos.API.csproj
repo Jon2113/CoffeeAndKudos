@@ -6,9 +6,9 @@
     <UserSecretsId>e00e1126-975f-4815-b2f4-069e16bcce1f</UserSecretsId>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="10.0.3" />
+    <ProjectReference Include="..\CoffeeAndKudos.Model\CoffeeAndKudos.Model.csproj" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\CoffeeAndKudos.Model\CoffeeAndKudos.Model.csproj" />
+    <PackageReference Include="Swashbuckle.AspNetCore" Version="6.9.0" />
   </ItemGroup>
 </Project>
