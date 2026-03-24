@@ -1,0 +1,49 @@
+<div class="page-shell login-shell">
+  <section class="login-panel">
+    <div class="intro-copy">
+      <p class="eyebrow">Coffee &amp; Kudos</p>
+      <h1>Waehle aus, wer du heute bist.</h1>
+      <p>
+        Der Einstieg ist bewusst leicht gehalten, genau wie in eurer Outline: User waehlen,
+        ID merken, Dashboard laden.
+      </p>
+    </div>
+
+    <section *ngIf="isLoading" class="loading-card">
+      <div class="spinner"></div>
+      <div>
+        <p class="eyebrow">Login</p>
+        <h2>Die User-Liste wird geladen.</h2>
+      </div>
+    </section>
+
+    <p *ngIf="errorMessage" class="status-banner error">{{ errorMessage }}</p>
+
+    <div *ngIf="!isLoading && !errorMessage && users.length > 0" class="user-grid">
+      <button
+        *ngFor="let user of users; trackBy: trackByUserId"
+        type="button"
+        class="user-card"
+        (click)="selectUser(user.userId)"
+      >
+        <span class="user-avatar">{{ user.username.charAt(0) | uppercase }}</span>
+
+        <div class="user-copy">
+          <h2>{{ user.username }}</h2>
+          <p>{{ user.email || 'Keine E-Mail hinterlegt' }}</p>
+        </div>
+
+        <div class="user-metrics">
+          <span>{{ user.countLent }} verliehen</span>
+          <span>{{ user.favorsGiven }} Gefallen gegeben</span>
+        </div>
+      </button>
+    </div>
+
+    <section *ngIf="!isLoading && !errorMessage && users.length === 0" class="empty-panel">
+      <p class="eyebrow">Noch keine User</p>
+      <h2>Im Backend gibt es aktuell keine Personen zum Auswaehlen.</h2>
+      <p>Lege zuerst User ueber die API oder Datenbank an, dann erscheint hier die Auswahl.</p>
+    </section>
+  </section>
+</div>

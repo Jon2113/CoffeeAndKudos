@@ -1,0 +1,17 @@
+<section class="scale-shell">
+  <div class="scale-header">
+    <div>
+      <p class="eyebrow">Scale</p>
+      <h2>{{ heading }}</h2>
+      <p>{{ subline }}</p>
+    </div>
+  </div>
+
+  <div class="scale-grid">
+    <article *ngFor="let card of cards" class="stat-card" [ngClass]="card.tone">
+      <span class="stat-label">{{ card.label }}</span>
+      <strong class="stat-value">{{ card.value }}</strong>
+      <p>{{ card.detail }}</p>
+    </article>
+  </div>
+</section>

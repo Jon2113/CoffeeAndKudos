@@ -1,0 +1,61 @@
+<section class="log-shell">
+  <div class="log-header">
+    <div>
+      <p class="eyebrow">Activity Log</p>
+      <h2>Gemischte Chronik aus Borrows und Favors</h2>
+    </div>
+    <span class="log-badge">{{ entries.length }} Eintraege</span>
+  </div>
+
+  <p *ngIf="actionError" class="status-banner error">{{ actionError }}</p>
+
+  <div *ngIf="entries.length > 0; else emptyState" class="log-list">
+    <article
+      *ngFor="let entry of entries; trackBy: trackByEntryId"
+      class="log-item"
+      [class.borrow]="entry.accent === 'borrow'"
+      [class.favor]="entry.accent === 'favor'"
+      [class.is-complete]="entry.isCompleted"
+    >
+      <div class="log-stripe"></div>
+
+      <div class="log-main">
+        <div class="log-topline">
+          <span class="log-type">{{ entry.type | uppercase }}</span>
+          <span class="log-status">{{ entry.statusText }}</span>
+        </div>
+
+        <h3>{{ entry.title }}</h3>
+        <p>{{ entry.directionText }} mit {{ entry.counterpartyName }}</p>
+
+        <div class="log-meta">
+          <span>{{ entry.createdAt | date: 'dd.MM.yyyy' }}</span>
+          <span *ngIf="entry.dueDate">Due: {{ entry.dueDate | date: 'dd.MM.yyyy' }}</span>
+        </div>
+      </div>
+
+      <button
+        type="button"
+        class="ghost-button"
+        [disabled]="entry.isCompleted || busyEntryId === entry.id"
+        (click)="completeEntry(entry)"
+      >
+        {{
+          busyEntryId === entry.id
+            ? 'Speichert...'
+            : entry.isCompleted
+              ? 'Bereits erledigt'
+              : entry.actionText
+        }}
+      </button>
+    </article>
+  </div>
+
+  <ng-template #emptyState>
+    <section class="empty-panel">
+      <p class="eyebrow">Noch leer</p>
+      <h2>Fuer diese Ansicht gibt es aktuell keine Eintraege.</h2>
+      <p>Lege ueber den Plus-Button einen neuen Borrow oder Favor an.</p>
+    </section>
+  </ng-template>
+</section>

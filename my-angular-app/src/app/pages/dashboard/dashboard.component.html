@@ -1,0 +1,70 @@
+<div class="page-shell dashboard-shell">
+  <section class="hero-panel">
+    <div class="hero-copy">
+      <p class="eyebrow">Coffee &amp; Kudos Dashboard</p>
+      <h1 *ngIf="currentUser">{{ currentUser.username }}, deine Balance ist bereit.</h1>
+      <p>{{ viewDescription }}</p>
+    </div>
+
+    <div class="hero-controls">
+      <label class="field-card">
+        <span>Filter nach Person</span>
+        <select
+          [(ngModel)]="selectedOtherUserId"
+          name="selectedOtherUserId"
+          (ngModelChange)="onFilterChange($event)"
+        >
+          <option value="">Alle Personen</option>
+          <option *ngFor="let user of otherUsers" [value]="user.userId">
+            {{ user.username }}
+          </option>
+        </select>
+      </label>
+
+      <button type="button" class="secondary-button" (click)="switchUser()">
+        User wechseln
+      </button>
+    </div>
+  </section>
+
+  <p *ngIf="errorMessage" class="status-banner error">{{ errorMessage }}</p>
+
+  <section *ngIf="isLoading" class="loading-card">
+    <div class="spinner"></div>
+    <div>
+      <p class="eyebrow">Sync laeuft</p>
+      <h2>Das Dashboard holt gerade User, Logs und Scale-Daten.</h2>
+    </div>
+  </section>
+
+  <ng-container *ngIf="!isLoading && !errorMessage">
+    <app-scale
+      [stats]="scaleStats"
+      [currentUserName]="currentUser?.username ?? ''"
+      [otherUserName]="selectedOtherUserName"
+    ></app-scale>
+
+    <app-activity-log
+      [entries]="activityEntries"
+      (entryUpdated)="refreshDashboard()"
+    ></app-activity-log>
+  </ng-container>
+
+  <button
+    type="button"
+    class="floating-create-button"
+    aria-label="Neuen Eintrag anlegen"
+    (click)="openComposer()"
+  >
+    +
+  </button>
+
+  <app-create-entry
+    [isOpen]="isComposerOpen"
+    [users]="otherUsers"
+    [currentUserId]="currentUserId"
+    [selectedOtherUserId]="selectedOtherUserId || null"
+    (closed)="closeComposer()"
+    (saved)="handleEntrySaved()"
+  ></app-create-entry>
+</div>

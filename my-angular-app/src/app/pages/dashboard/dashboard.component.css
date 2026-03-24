@@ -1,0 +1,75 @@
+.dashboard-shell {
+  display: grid;
+  gap: 1.5rem;
+  min-height: 100vh;
+  padding-top: 2rem;
+}
+
+.hero-panel {
+  display: grid;
+  grid-template-columns: minmax(0, 1.4fr) minmax(280px, 0.8fr);
+  gap: 1rem;
+  padding: 1.6rem;
+  border: 1px solid var(--border);
+  border-radius: 30px;
+  background:
+    radial-gradient(circle at top left, rgba(214, 167, 86, 0.28), transparent 26%),
+    linear-gradient(135deg, rgba(255, 251, 245, 0.96), rgba(244, 232, 218, 0.94));
+  box-shadow: var(--shadow-soft);
+}
+
+.hero-copy h1 {
+  max-width: 18ch;
+}
+
+.hero-controls {
+  display: grid;
+  gap: 1rem;
+  align-content: end;
+}
+
+.floating-create-button {
+  position: fixed;
+  right: 1.75rem;
+  bottom: 1.75rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 4rem;
+  height: 4rem;
+  border: 0;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--accent), var(--accent-2));
+  color: white;
+  font-size: 2rem;
+  line-height: 1;
+  box-shadow: 0 22px 44px rgba(125, 84, 49, 0.28);
+}
+
+.floating-create-button:hover {
+  transform: translateY(-2px) scale(1.02);
+}
+
+@media (max-width: 900px) {
+  .hero-panel {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 720px) {
+  .dashboard-shell {
+    padding-top: 1.2rem;
+  }
+
+  .hero-panel {
+    padding: 1.2rem;
+    border-radius: 24px;
+  }
+
+  .floating-create-button {
+    right: 1rem;
+    bottom: 1rem;
+    width: 3.5rem;
+    height: 3.5rem;
+  }
+}

@@ -1,0 +1,93 @@
+.log-shell {
+  display: grid;
+  gap: 1rem;
+  padding: 1.4rem;
+  border: 1px solid var(--border);
+  border-radius: 30px;
+  background: rgba(255, 252, 247, 0.9);
+  box-shadow: var(--shadow-soft);
+}
+
+.log-header {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  align-items: end;
+}
+
+.log-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.45rem 0.9rem;
+  border-radius: 999px;
+  background: rgba(155, 93, 59, 0.1);
+  color: var(--accent);
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.log-list {
+  display: grid;
+  gap: 0.9rem;
+}
+
+.log-item {
+  display: grid;
+  grid-template-columns: 8px minmax(0, 1fr) auto;
+  gap: 1rem;
+  align-items: center;
+  padding: 1rem;
+  border-radius: 24px;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.96), rgba(249, 241, 231, 0.92));
+  border: 1px solid rgba(107, 71, 41, 0.1);
+}
+
+.log-item.is-complete {
+  opacity: 0.78;
+}
+
+.log-item.borrow .log-stripe {
+  background: linear-gradient(180deg, #c7743d, #f0c27b);
+}
+
+.log-item.favor .log-stripe {
+  background: linear-gradient(180deg, #0f766e, #5eb6ae);
+}
+
+.log-stripe {
+  width: 100%;
+  height: 100%;
+  border-radius: 999px;
+}
+
+.log-main {
+  min-width: 0;
+}
+
+.log-topline,
+.log-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.65rem;
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+.log-main h3 {
+  margin: 0.4rem 0;
+}
+
+.log-main p {
+  margin: 0 0 0.7rem;
+}
+
+@media (max-width: 760px) {
+  .log-item {
+    grid-template-columns: 8px 1fr;
+  }
+
+  .log-item button {
+    grid-column: 2;
+    justify-self: start;
+  }
+}

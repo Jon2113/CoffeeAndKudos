@@ -1,0 +1,92 @@
+<div *ngIf="isOpen" class="composer-overlay" (click)="closePanel()">
+  <section class="composer-panel" (click)="stopPanelClick($event)">
+    <header class="composer-header">
+      <div>
+        <p class="eyebrow">Create Entry</p>
+        <h2>{{ modalTitle }}</h2>
+      </div>
+
+      <button type="button" class="ghost-button" (click)="closePanel()">Schliessen</button>
+    </header>
+
+    <div class="toggle-row">
+      <button
+        type="button"
+        class="toggle-chip"
+        [class.active]="entryType === 'favor'"
+        (click)="chooseType('favor')"
+      >
+        Favor
+      </button>
+      <button
+        type="button"
+        class="toggle-chip"
+        [class.active]="entryType === 'borrow'"
+        (click)="chooseType('borrow')"
+      >
+        Borrow
+      </button>
+    </div>
+
+    <div class="toggle-row direction">
+      <button
+        type="button"
+        class="toggle-chip"
+        [class.active]="direction === 'outgoing'"
+        (click)="chooseDirection('outgoing')"
+      >
+        {{ firstDirectionLabel }}
+      </button>
+      <button
+        type="button"
+        class="toggle-chip"
+        [class.active]="direction === 'incoming'"
+        (click)="chooseDirection('incoming')"
+      >
+        {{ secondDirectionLabel }}
+      </button>
+    </div>
+
+    <label class="field-stack">
+      <span>{{ titleLabel }}</span>
+      <input
+        type="text"
+        [(ngModel)]="title"
+        name="title"
+        [placeholder]="titlePlaceholder"
+      >
+    </label>
+
+    <div class="field-grid">
+      <label class="field-stack">
+        <span>Gegenueber</span>
+        <select [(ngModel)]="otherUserId" name="otherUserId">
+          <option value="">Bitte Person waehlen</option>
+          <option *ngFor="let user of users" [value]="user.userId">
+            {{ user.username }}
+          </option>
+        </select>
+      </label>
+
+      <label class="field-stack">
+        <span>Erfasst am</span>
+        <input type="date" [(ngModel)]="createdOn" name="createdOn">
+      </label>
+    </div>
+
+    <label *ngIf="entryType === 'borrow'" class="field-stack">
+      <span>Faelligkeitsdatum</span>
+      <input type="date" [(ngModel)]="dueDate" name="dueDate">
+    </label>
+
+    <p class="composer-summary">{{ summaryText }}</p>
+    <p *ngIf="errorMessage" class="status-banner error">{{ errorMessage }}</p>
+
+    <footer class="composer-footer">
+      <button type="button" class="ghost-button" (click)="closePanel()">Abbrechen</button>
+      <button type="button" class="primary-button" [disabled]="!canSave" (click)="saveEntry()">
+        {{ isSaving ? 'Speichert...' : 'Speichern' }}
+      </button>
+    </footer>
+  </section>
+</div>

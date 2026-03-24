@@ -1,0 +1,5 @@
+/.angular
+/out-tsc
+/dist
+/node_modules
+/build.log
