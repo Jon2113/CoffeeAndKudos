@@ -1,6 +1,7 @@
 namespace CoffeeAndKudos.Model.Repositories;
 using Npgsql;
 using Microsoft.Extensions.Configuration;
+using System;
 
 public class BaseRepository
 {
@@ -8,7 +9,35 @@ public class BaseRepository
 
     public BaseRepository(IConfiguration configuration)
     {
-        ConnectionString = configuration.GetConnectionString("AppProgDb") ?? string.Empty;
+        string rawConnectionString = configuration.GetConnectionString("AppProgDb") ?? string.Empty;
+        if (string.IsNullOrWhiteSpace(rawConnectionString))
+        {
+            throw new InvalidOperationException(
+                "Missing connection string 'ConnectionStrings:AppProgDb'.");
+        }
+
+        var builder = new NpgsqlConnectionStringBuilder(rawConnectionString);
+
+        if (string.IsNullOrWhiteSpace(builder.Password))
+        {
+            string? password =
+                configuration["ConnectionStrings:AppProgDbPassword"] ??
+                configuration["SUPABASE_DB_PASSWORD"] ??
+                configuration["DB_PASSWORD"];
+
+            if (!string.IsNullOrWhiteSpace(password))
+            {
+                builder.Password = password;
+            }
+        }
+
+        if (string.IsNullOrWhiteSpace(builder.Password))
+        {
+            throw new InvalidOperationException(
+                "Database password missing. Configure 'ConnectionStrings:AppProgDbPassword' via User Secrets or environment variable.");
+        }
+
+        ConnectionString = builder.ConnectionString;
     }
 
     protected NpgsqlDataReader GetData(NpgsqlConnection conn, NpgsqlCommand cmd)
