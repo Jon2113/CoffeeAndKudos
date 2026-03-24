@@ -6,6 +6,9 @@
 # dotenv files
 .env
 
+# Root npm artifacts (frontend lives in my-angular-app/)
+/package-lock.json
+
 # User-specific files
 *.rsuser
 *.suo
