@@ -79,6 +79,35 @@
   font-size: 0.92rem;
 }
 
+.compact-button {
+  min-height: 2.4rem;
+  padding: 0.65rem 0.95rem;
+  font-size: 0.9rem;
+}
+
+.danger-button {
+  border: 1px solid rgba(185, 28, 28, 0.3);
+  border-radius: 999px;
+  background: rgba(254, 226, 226, 0.75);
+  color: #991b1b;
+}
+
+.user-actions,
+.edit-user-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.55rem;
+}
+
+.edit-user-form {
+  display: grid;
+  gap: 0.75rem;
+  padding: 0.9rem;
+  border-radius: 18px;
+  border: 1px solid rgba(37, 99, 235, 0.22);
+  background: rgba(230, 238, 255, 0.45);
+}
+
 .create-user-panel {
   display: grid;
   gap: 0.9rem;
@@ -109,5 +138,10 @@
   .create-user-header {
     flex-direction: column;
     align-items: stretch;
+  }
+
+  .user-actions,
+  .edit-user-actions {
+    flex-direction: column;
   }
 }

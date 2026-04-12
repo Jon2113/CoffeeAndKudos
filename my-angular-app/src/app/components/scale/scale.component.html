@@ -12,7 +12,11 @@
       *ngFor="let card of cards"
       type="button"
       class="stat-card"
-      [ngClass]="[card.tone, isActive(card.filterKey) ? 'is-active' : '']"
+      [ngClass]="[
+        card.tone,
+        isActive(card.filterKey) ? 'is-active' : '',
+        isMuted(card.filterKey) ? 'is-muted' : ''
+      ]"
       (click)="selectFilter(card.filterKey)"
     >
       <span class="stat-label">{{ card.label }}</span>

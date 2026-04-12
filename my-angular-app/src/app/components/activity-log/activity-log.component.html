@@ -81,7 +81,7 @@
     </div>
   </section>
 
-  <section *ngIf="scaleFilter" class="scale-filter-banner">
+  <section *ngIf="hasScaleFilters" class="scale-filter-banner">
     <div>
       <p class="eyebrow">Scale Filter Active</p>
       <p>
@@ -162,7 +162,7 @@
           (click)="completeEntry(entry)"
         >
           {{
-            busyEntryId === entry.id
+            busyEntryId === entry.id && busyAction === 'complete'
               ? 'Saving...'
               : entry.isCompleted
                 ? 'Already completed'
@@ -178,6 +178,16 @@
           (click)="startEdit(entry)"
         >
           Edit
+        </button>
+
+        <button
+          *ngIf="isEditMode"
+          type="button"
+          class="danger-button compact-button"
+          [disabled]="isSavingEdit || busyEntryId === entry.id"
+          (click)="deleteEntry(entry)"
+        >
+          {{ busyEntryId === entry.id && busyAction === 'delete' ? 'Deleting...' : 'Delete' }}
         </button>
 
         <button

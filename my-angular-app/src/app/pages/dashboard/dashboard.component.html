@@ -42,13 +42,13 @@
       [stats]="scaleStats"
       [currentUserName]="currentUser?.username ?? ''"
       [otherUserName]="selectedOtherUserName"
-      [activeFilter]="activeScaleFilter"
+      [activeFilters]="activeScaleFilters"
       (filterSelected)="onScaleFilterSelected($event)"
     ></app-scale>
 
     <app-activity-log
       [entries]="activityEntries"
-      [scaleFilter]="activeScaleFilter"
+      [scaleFilters]="activeScaleFilters"
       [selectedOtherUserName]="selectedOtherUserName"
       (clearScaleFilter)="clearScaleFilter()"
       (entryUpdated)="refreshDashboard()"

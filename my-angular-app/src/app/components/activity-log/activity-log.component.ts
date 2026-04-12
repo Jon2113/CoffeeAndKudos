@@ -17,14 +17,22 @@ type ActivityDateSort = 'newest' | 'oldest' | 'dueSoon';
   styleUrls: ['./activity-log.component.css'],
 })
 export class ActivityLogComponent implements OnChanges {
+  private static readonly FILTER_LABELS: Record<ScaleFilterKey, string> = {
+    countLent: 'Borrows you lent',
+    countBorrowed: 'Borrows you borrowed',
+    favorsGiven: 'Favors you gave',
+    favorsTaken: 'Favors you received',
+  };
+
   @Input() entries: ActivityEntry[] = [];
-  @Input() scaleFilter: ScaleFilterKey | null = null;
+  @Input() scaleFilters: ScaleFilterKey[] = [];
   @Input() selectedOtherUserName = '';
 
   @Output() entryUpdated = new EventEmitter<void>();
   @Output() clearScaleFilter = new EventEmitter<void>();
 
   busyEntryId = '';
+  busyAction: 'complete' | 'delete' | '' = '';
   actionError = '';
   editError = '';
   editingEntryId = '';
@@ -70,8 +78,8 @@ export class ActivityLogComponent implements OnChanges {
 
   get activeFilterCount(): number {
     let count = 0;
-    if (this.scaleFilter) {
-      count += 1;
+    if (this.scaleFilters.length > 0) {
+      count += this.scaleFilters.length;
     }
     if (this.typeFilter !== 'all') {
       count += 1;
@@ -102,19 +110,14 @@ export class ActivityLogComponent implements OnChanges {
     );
   }
 
+  get hasScaleFilters(): boolean {
+    return this.scaleFilters.length > 0;
+  }
+
   get scaleFilterLabel(): string {
-    switch (this.scaleFilter) {
-      case 'countLent':
-        return 'Open borrows you lent';
-      case 'countBorrowed':
-        return 'Open borrows you borrowed';
-      case 'favorsGiven':
-        return 'Open favors you gave';
-      case 'favorsTaken':
-        return 'Open favors you received';
-      default:
-        return '';
-    }
+    return this.scaleFilters
+      .map((key) => ActivityLogComponent.FILTER_LABELS[key])
+      .join(', ');
   }
 
   completeEntry(entry: ActivityEntry): void {
@@ -124,6 +127,7 @@ export class ActivityLogComponent implements OnChanges {
 
     this.actionError = '';
     this.busyEntryId = entry.id;
+    this.busyAction = 'complete';
 
     const request$ =
       entry.type === 'borrow'
@@ -133,12 +137,51 @@ export class ActivityLogComponent implements OnChanges {
     request$.subscribe({
       next: () => {
         this.busyEntryId = '';
+        this.busyAction = '';
         this.entryUpdated.emit();
       },
       error: () => {
         this.actionError =
           'The entry could not be updated. Please verify the API is reachable.';
         this.busyEntryId = '';
+        this.busyAction = '';
+      },
+    });
+  }
+
+  deleteEntry(entry: ActivityEntry): void {
+    if (this.busyEntryId || this.isSavingEdit) {
+      return;
+    }
+
+    const isConfirmed = window.confirm(
+      `Delete "${entry.title}"? This action cannot be undone.`,
+    );
+
+    if (!isConfirmed) {
+      return;
+    }
+
+    this.actionError = '';
+    this.busyEntryId = entry.id;
+    this.busyAction = 'delete';
+
+    const request$ =
+      entry.type === 'borrow'
+        ? this.borrowService.deleteBorrow(entry.id)
+        : this.favorService.deleteFavor(entry.id);
+
+    request$.subscribe({
+      next: () => {
+        this.busyEntryId = '';
+        this.busyAction = '';
+        this.entryUpdated.emit();
+      },
+      error: () => {
+        this.actionError =
+          'The entry could not be deleted. Please verify the API is reachable.';
+        this.busyEntryId = '';
+        this.busyAction = '';
       },
     });
   }
@@ -168,7 +211,7 @@ export class ActivityLogComponent implements OnChanges {
   }
 
   startEdit(entry: ActivityEntry): void {
-    if (!this.isEditMode || this.isSavingEdit) {
+    if (!this.isEditMode || this.isSavingEdit || this.busyEntryId) {
       return;
     }
 
@@ -192,7 +235,7 @@ export class ActivityLogComponent implements OnChanges {
   }
 
   saveEdit(entry: ActivityEntry): void {
-    if (!this.isEditing(entry.id) || this.isSavingEdit) {
+    if (!this.isEditing(entry.id) || this.isSavingEdit || this.busyEntryId) {
       return;
     }
 
@@ -242,25 +285,27 @@ export class ActivityLogComponent implements OnChanges {
   }
 
   private applyScaleFilter(entries: ActivityEntry[]): ActivityEntry[] {
-    switch (this.scaleFilter) {
+    if (this.scaleFilters.length === 0) {
+      return entries;
+    }
+
+    return entries.filter((entry) =>
+      this.scaleFilters.some((filterKey) => this.matchesScaleFilter(entry, filterKey)),
+    );
+  }
+
+  private matchesScaleFilter(entry: ActivityEntry, filterKey: ScaleFilterKey): boolean {
+    switch (filterKey) {
       case 'countLent':
-        return entries.filter(
-          (entry) => entry.type === 'borrow' && entry.direction === 'outgoing' && !entry.isCompleted,
-        );
+        return entry.type === 'borrow' && entry.direction === 'outgoing';
       case 'countBorrowed':
-        return entries.filter(
-          (entry) => entry.type === 'borrow' && entry.direction === 'incoming' && !entry.isCompleted,
-        );
+        return entry.type === 'borrow' && entry.direction === 'incoming';
       case 'favorsGiven':
-        return entries.filter(
-          (entry) => entry.type === 'favor' && entry.direction === 'outgoing' && !entry.isCompleted,
-        );
+        return entry.type === 'favor' && entry.direction === 'outgoing';
       case 'favorsTaken':
-        return entries.filter(
-          (entry) => entry.type === 'favor' && entry.direction === 'incoming' && !entry.isCompleted,
-        );
+        return entry.type === 'favor' && entry.direction === 'incoming';
       default:
-        return entries;
+        return true;
     }
   }
 

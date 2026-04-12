@@ -46,6 +46,13 @@
   color: #1e40af;
 }
 
+.danger-button {
+  border: 1px solid rgba(185, 28, 28, 0.3);
+  border-radius: 999px;
+  background: rgba(254, 226, 226, 0.75);
+  color: #991b1b;
+}
+
 .filter-panel {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));

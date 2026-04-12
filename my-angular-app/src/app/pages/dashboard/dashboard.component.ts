@@ -17,6 +17,13 @@ import { UserService } from '../../services/user.service';
   styleUrls: ['./dashboard.component.css'],
 })
 export class DashboardComponent implements OnInit, OnDestroy {
+  private static readonly ALL_SCALE_FILTERS: ScaleFilterKey[] = [
+    'countLent',
+    'countBorrowed',
+    'favorsGiven',
+    'favorsTaken',
+  ];
+
   currentUserId = '';
   currentUser: User | null = null;
   users: User[] = [];
@@ -31,7 +38,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
   };
   isLoading = true;
   isComposerOpen = false;
-  activeScaleFilter: ScaleFilterKey | null = null;
+  activeScaleFilters: ScaleFilterKey[] = [];
   errorMessage = '';
   private hardTimeoutHandle: ReturnType<typeof setTimeout> | null = null;
 
@@ -84,11 +91,17 @@ export class DashboardComponent implements OnInit, OnDestroy {
   }
 
   onScaleFilterSelected(filterKey: ScaleFilterKey): void {
-    this.activeScaleFilter = this.activeScaleFilter === filterKey ? null : filterKey;
+    const currentlyActive = this.activeScaleFilters.includes(filterKey);
+    const nextFilters = currentlyActive
+      ? this.activeScaleFilters.filter((entry) => entry !== filterKey)
+      : [...this.activeScaleFilters, filterKey];
+
+    this.activeScaleFilters =
+      nextFilters.length === DashboardComponent.ALL_SCALE_FILTERS.length ? [] : nextFilters;
   }
 
   clearScaleFilter(): void {
-    this.activeScaleFilter = null;
+    this.activeScaleFilters = [];
   }
 
   switchUser(): void {

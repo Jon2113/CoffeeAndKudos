@@ -17,11 +17,9 @@
     <p *ngIf="errorMessage" class="status-banner error">{{ errorMessage }}</p>
 
     <div *ngIf="!isLoading && !errorMessage && users.length > 0" class="user-grid">
-      <button
+      <article
         *ngFor="let user of users; trackBy: trackByUserId"
-        type="button"
         class="user-card"
-        (click)="selectUser(user.userId)"
       >
         <span class="user-avatar">{{ user.username.charAt(0) | uppercase }}</span>
 
@@ -34,8 +32,71 @@
           <span>{{ user.countLent }} lent</span>
           <span>{{ user.favorsGiven }} favors given</span>
         </div>
-      </button>
+        <div class="user-actions">
+          <button type="button" class="primary-button compact-button" (click)="selectUser(user.userId)">
+            Open dashboard
+          </button>
+          <button
+            type="button"
+            class="ghost-button compact-button"
+            [disabled]="isSavingUserChanges || busyDeleteUserId === user.userId"
+            (click)="startUserEdit(user)"
+          >
+            Edit
+          </button>
+          <button
+            type="button"
+            class="danger-button compact-button"
+            [disabled]="isSavingUserChanges || busyDeleteUserId === user.userId"
+            (click)="deleteUser(user)"
+          >
+            {{ busyDeleteUserId === user.userId ? 'Deleting...' : 'Delete' }}
+          </button>
+        </div>
+
+        <section *ngIf="isEditingUser(user.userId)" class="edit-user-form">
+          <label class="field-stack">
+            <span>Username</span>
+            <input
+              type="text"
+              [(ngModel)]="editUsername"
+              [name]="'editUsername-' + user.userId"
+            >
+          </label>
+
+          <label class="field-stack">
+            <span>Email</span>
+            <input
+              type="email"
+              [(ngModel)]="editEmail"
+              [name]="'editEmail-' + user.userId"
+            >
+          </label>
+
+          <div class="edit-user-actions">
+            <button
+              type="button"
+              class="primary-button compact-button"
+              [disabled]="!canSaveUserEdit || editingUserId !== user.userId"
+              (click)="saveUserEdit(user)"
+            >
+              {{ isSavingUserChanges ? 'Saving...' : 'Save changes' }}
+            </button>
+            <button
+              type="button"
+              class="ghost-button compact-button"
+              [disabled]="isSavingUserChanges"
+              (click)="cancelUserEdit()"
+            >
+              Cancel
+            </button>
+          </div>
+        </section>
+      </article>
     </div>
+
+    <p *ngIf="manageErrorMessage" class="status-banner error">{{ manageErrorMessage }}</p>
+    <p *ngIf="manageInfoMessage" class="status-banner success">{{ manageInfoMessage }}</p>
 
     <section *ngIf="!isLoading && !errorMessage" class="create-user-panel">
       <div class="create-user-header">

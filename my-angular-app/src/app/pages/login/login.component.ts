@@ -16,10 +16,17 @@ export class LoginComponent implements OnInit, OnDestroy {
   isLoading = true;
   isCreatePanelOpen = false;
   isCreatingUser = false;
+  isSavingUserChanges = false;
+  busyDeleteUserId = '';
+  editingUserId = '';
+  editUsername = '';
+  editEmail = '';
   newUsername = '';
   newEmail = '';
   createInfoMessage = '';
   createErrorMessage = '';
+  manageInfoMessage = '';
+  manageErrorMessage = '';
   errorMessage = '';
   private hardTimeoutHandle: ReturnType<typeof setTimeout> | null = null;
 
@@ -60,10 +67,21 @@ export class LoginComponent implements OnInit, OnDestroy {
     );
   }
 
+  get canSaveUserEdit(): boolean {
+    return (
+      !this.isSavingUserChanges &&
+      Boolean(this.editingUserId) &&
+      Boolean(this.editUsername.trim()) &&
+      Boolean(this.editEmail.trim())
+    );
+  }
+
   toggleCreatePanel(): void {
     this.isCreatePanelOpen = !this.isCreatePanelOpen;
     this.createErrorMessage = '';
     this.createInfoMessage = '';
+    this.manageErrorMessage = '';
+    this.manageInfoMessage = '';
   }
 
   createUser(): void {
@@ -86,6 +104,8 @@ export class LoginComponent implements OnInit, OnDestroy {
           this.newUsername = '';
           this.newEmail = '';
           this.createInfoMessage = 'User created successfully. You can now select the new profile.';
+          this.manageErrorMessage = '';
+          this.manageInfoMessage = '';
           this.loadUsers(false);
           this.cdr.detectChanges();
         },
@@ -96,6 +116,102 @@ export class LoginComponent implements OnInit, OnDestroy {
           this.cdr.detectChanges();
         },
       });
+  }
+
+  startUserEdit(user: User): void {
+    if (this.isSavingUserChanges || this.busyDeleteUserId) {
+      return;
+    }
+
+    this.editingUserId = user.userId;
+    this.editUsername = user.username;
+    this.editEmail = user.email;
+    this.manageErrorMessage = '';
+    this.manageInfoMessage = '';
+  }
+
+  cancelUserEdit(): void {
+    if (this.isSavingUserChanges) {
+      return;
+    }
+
+    this.editingUserId = '';
+    this.editUsername = '';
+    this.editEmail = '';
+  }
+
+  saveUserEdit(user: User): void {
+    if (!this.canSaveUserEdit || this.editingUserId !== user.userId) {
+      return;
+    }
+
+    this.isSavingUserChanges = true;
+    this.manageErrorMessage = '';
+    this.manageInfoMessage = '';
+
+    this.userService
+      .updateUser({
+        ...user,
+        username: this.editUsername.trim(),
+        email: this.editEmail.trim(),
+      })
+      .subscribe({
+        next: () => {
+          this.isSavingUserChanges = false;
+          this.manageInfoMessage = 'User profile updated successfully.';
+          this.manageErrorMessage = '';
+          this.cancelUserEdit();
+          this.loadUsers(false);
+          this.cdr.detectChanges();
+        },
+        error: () => {
+          this.isSavingUserChanges = false;
+          this.manageErrorMessage =
+            'The user could not be updated. Please verify API and database connectivity.';
+          this.cdr.detectChanges();
+        },
+      });
+  }
+
+  deleteUser(user: User): void {
+    if (this.isSavingUserChanges || this.busyDeleteUserId) {
+      return;
+    }
+
+    const isConfirmed = window.confirm(
+      `Delete user "${user.username}"? This action cannot be undone.`,
+    );
+
+    if (!isConfirmed) {
+      return;
+    }
+
+    this.busyDeleteUserId = user.userId;
+    this.manageErrorMessage = '';
+    this.manageInfoMessage = '';
+
+    this.userService.deleteUser(user.userId).subscribe({
+      next: () => {
+        this.busyDeleteUserId = '';
+        if (this.editingUserId === user.userId) {
+          this.cancelUserEdit();
+        }
+        this.manageInfoMessage = 'User deleted successfully.';
+        this.manageErrorMessage = '';
+        this.loadUsers(false);
+        this.cdr.detectChanges();
+      },
+      error: () => {
+        this.busyDeleteUserId = '';
+        this.manageErrorMessage =
+          'The user could not be deleted. Please verify API and database connectivity.';
+        this.cdr.detectChanges();
+      },
+    });
+  }
+
+  isEditingUser(userId: string): boolean {
+    return this.editingUserId === userId;
   }
 
   private loadUsers(showLoadingState = true): void {

@@ -20,7 +20,7 @@ export class ScaleComponent {
   @Input() stats: ScaleStats | null = null;
   @Input() currentUserName = '';
   @Input() otherUserName = '';
-  @Input() activeFilter: ScaleFilterKey | null = null;
+  @Input() activeFilters: ScaleFilterKey[] = [];
   @Output() filterSelected = new EventEmitter<ScaleFilterKey>();
 
   get heading(): string {
@@ -79,7 +79,15 @@ export class ScaleComponent {
     this.filterSelected.emit(filterKey);
   }
 
+  get hasActiveFilters(): boolean {
+    return this.activeFilters.length > 0;
+  }
+
   isActive(filterKey: ScaleFilterKey): boolean {
-    return this.activeFilter === filterKey;
+    return this.activeFilters.includes(filterKey);
+  }
+
+  isMuted(filterKey: ScaleFilterKey): boolean {
+    return this.hasActiveFilters && !this.isActive(filterKey);
   }
 }

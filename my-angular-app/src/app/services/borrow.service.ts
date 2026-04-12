@@ -59,6 +59,10 @@ export class BorrowService {
     );
   }
 
+  deleteBorrow(borrowId: string): Observable<void> {
+    return this.http.delete<void>(`${this.apiUrl}/${borrowId}`);
+  }
+
   returnBorrow(borrowId: string): Observable<void> {
     return this.http.get<Borrow>(`${this.apiUrl}/${borrowId}`).pipe(
       switchMap((borrow) =>

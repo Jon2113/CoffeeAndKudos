@@ -53,6 +53,18 @@ export class UserService {
     });
   }
 
+  updateUser(user: User): Observable<void> {
+    return this.http.put<void>(this.apiUrl, {
+      ...user,
+      username: user.username.trim(),
+      email: user.email.trim(),
+    });
+  }
+
+  deleteUser(userId: string): Observable<void> {
+    return this.http.delete<void>(`${this.apiUrl}/${userId}`);
+  }
+
   getUserById(userId: string): Observable<User> {
     return this.http.get<User>(`${this.apiUrl}/${userId}`);
   }

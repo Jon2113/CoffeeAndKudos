@@ -45,6 +45,13 @@
   box-shadow: 0 16px 30px rgba(50, 50, 50, 0.16);
 }
 
+.stat-card.is-muted {
+  background: linear-gradient(180deg, rgba(242, 242, 242, 0.96), rgba(231, 231, 231, 0.92));
+  border-color: rgba(120, 120, 120, 0.18);
+  box-shadow: none;
+  opacity: 0.76;
+}
+
 .stat-label {
   display: block;
   margin-bottom: 0.9rem;

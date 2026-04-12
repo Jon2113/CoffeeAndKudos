@@ -59,6 +59,10 @@ export class FavorService {
     );
   }
 
+  deleteFavor(favorId: string): Observable<void> {
+    return this.http.delete<void>(`${this.apiUrl}/${favorId}`);
+  }
+
   settleFavor(favorId: string): Observable<void> {
     return this.http.get<Favor>(`${this.apiUrl}/${favorId}`).pipe(
       switchMap((favor) =>
