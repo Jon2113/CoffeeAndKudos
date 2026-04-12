@@ -42,7 +42,7 @@ export class ActivityLogComponent {
       },
       error: () => {
         this.actionError =
-          'Der Eintrag konnte nicht aktualisiert werden. Bitte pruefe, ob die API erreichbar ist.';
+          'The entry could not be updated. Please verify the API is reachable.';
         this.busyEntryId = '';
       },
     });

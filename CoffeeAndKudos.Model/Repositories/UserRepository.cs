@@ -147,11 +147,21 @@ where user_id = @user_id";
         {
             Username = data["username"].ToString() ?? string.Empty,
             Email = data["email"].ToString() ?? string.Empty,
-            CreatedAt = (DateTime)data["created_at"],
-            CountLent = (int)data["count_lent"],
-            CountBorrowed = (int)data["count_borrowed"],
-            FavorsGiven = (int)data["favors_given"],
-            FavorsTaken = (int)data["favors_taken"]
+            CreatedAt = data["created_at"] == DBNull.Value
+                ? DateTime.UtcNow
+                : (DateTime)data["created_at"],
+            CountLent = data["count_lent"] == DBNull.Value
+                ? 0
+                : (int)data["count_lent"],
+            CountBorrowed = data["count_borrowed"] == DBNull.Value
+                ? 0
+                : (int)data["count_borrowed"],
+            FavorsGiven = data["favors_given"] == DBNull.Value
+                ? 0
+                : (int)data["favors_given"],
+            FavorsTaken = data["favors_taken"] == DBNull.Value
+                ? 0
+                : (int)data["favors_taken"]
         };
     }
 }

@@ -2,17 +2,15 @@
   <section class="login-panel">
     <div class="intro-copy">
       <p class="eyebrow">Coffee &amp; Kudos</p>
-      <h1>Waehle deinen Benutzer aus.</h1>
-      <p>
-        Der Einstieg ist bewusst leicht gehalten.
-      </p>
+      <h1>Choose your user.</h1>
+      <p>Start by selecting who you are. We save your ID and load your dashboard.</p>
     </div>
 
     <section *ngIf="isLoading" class="loading-card">
       <div class="spinner"></div>
       <div>
         <p class="eyebrow">Login</p>
-        <h2>Die User-Liste wird geladen.</h2>
+        <h2>Loading user list.</h2>
       </div>
     </section>
 
@@ -29,20 +27,20 @@
 
         <div class="user-copy">
           <h2>{{ user.username }}</h2>
-          <p>{{ user.email || 'Keine E-Mail hinterlegt' }}</p>
+          <p>{{ user.email || 'No email provided' }}</p>
         </div>
 
         <div class="user-metrics">
-          <span>{{ user.countLent }} verliehen</span>
-          <span>{{ user.favorsGiven }} Gefallen gegeben</span>
+          <span>{{ user.countLent }} lent</span>
+          <span>{{ user.favorsGiven }} favors given</span>
         </div>
       </button>
     </div>
 
     <section *ngIf="!isLoading && !errorMessage && users.length === 0" class="empty-panel">
-      <p class="eyebrow">Noch keine User</p>
-      <h2>Im Backend gibt es aktuell keine Personen zur Auswahl.</h2>
-      <p>Lege zuerst User ueber die API oder Datenbank an, dann erscheint hier die Auswahl.</p>
+      <p class="eyebrow">No users yet</p>
+      <h2>No users are currently available in the backend.</h2>
+      <p>Create users via API or database and they will appear here.</p>
     </section>
   </section>
 </div>

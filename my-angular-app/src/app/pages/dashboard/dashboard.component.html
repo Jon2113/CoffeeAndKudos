@@ -2,19 +2,19 @@
   <section class="hero-panel">
     <div class="hero-copy">
       <p class="eyebrow">Coffee &amp; Kudos Dashboard</p>
-      <h1 *ngIf="currentUser">{{ currentUser.username }}, deine Balance ist bereit.</h1>
+      <h1 *ngIf="currentUser">{{ currentUser.username }}, your balance is ready.</h1>
       <p>{{ viewDescription }}</p>
     </div>
 
     <div class="hero-controls">
       <label class="field-card">
-        <span>Filter nach Person</span>
+        <span>Filter by person</span>
         <select
           [(ngModel)]="selectedOtherUserId"
           name="selectedOtherUserId"
           (ngModelChange)="onFilterChange($event)"
         >
-          <option value="">Alle Personen</option>
+          <option value="">All people</option>
           <option *ngFor="let user of otherUsers" [value]="user.userId">
             {{ user.username }}
           </option>
@@ -22,7 +22,7 @@
       </label>
 
       <button type="button" class="secondary-button" (click)="switchUser()">
-        User wechseln
+        Switch user
       </button>
     </div>
   </section>
@@ -32,8 +32,8 @@
   <section *ngIf="isLoading" class="loading-card">
     <div class="spinner"></div>
     <div>
-      <p class="eyebrow">Sync laeuft</p>
-      <h2>Das Dashboard holt gerade User, Logs und Scale-Daten.</h2>
+      <p class="eyebrow">Sync in progress</p>
+      <h2>Loading users, logs, and scale data.</h2>
     </div>
   </section>
 
@@ -53,7 +53,7 @@
   <button
     type="button"
     class="floating-create-button"
-    aria-label="Neuen Eintrag anlegen"
+    aria-label="Create a new entry"
     (click)="openComposer()"
   >
     +

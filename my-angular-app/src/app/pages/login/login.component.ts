@@ -1,4 +1,4 @@
-import { Component, OnDestroy, OnInit } from '@angular/core';
+import { ChangeDetectorRef, Component, OnDestroy, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
 import { timeout } from 'rxjs';
 
@@ -20,6 +20,7 @@ export class LoginComponent implements OnInit, OnDestroy {
   constructor(
     private readonly userService: UserService,
     private readonly router: Router,
+    private readonly cdr: ChangeDetectorRef,
   ) {}
 
   ngOnInit(): void {
@@ -32,8 +33,9 @@ export class LoginComponent implements OnInit, OnDestroy {
     this.hardTimeoutHandle = setTimeout(() => {
       if (this.isLoading) {
         this.errorMessage =
-          'Die Anfrage dauert zu lange. Bitte pruefe, ob Frontend-Proxy und API wirklich laufen.';
+          'The request is taking too long. Please verify the frontend proxy and API are running.';
         this.isLoading = false;
+        this.cdr.detectChanges();
       }
     }, 12000);
 
@@ -42,20 +44,22 @@ export class LoginComponent implements OnInit, OnDestroy {
         this.clearHardTimeout();
         this.users = users;
         this.isLoading = false;
+        this.cdr.detectChanges();
       },
       error: (error: unknown) => {
         this.clearHardTimeout();
         const maybeHttpError = error as { status?: number; name?: string };
         if (maybeHttpError?.name === 'TimeoutError') {
           this.errorMessage =
-            'Timeout beim Laden der User-Liste. Bitte pruefe API, Proxy und Datenbankverbindung.';
+            'Timeout while loading users. Please check API, proxy, and database connectivity.';
         } else if (maybeHttpError?.status) {
-          this.errorMessage = `Die User-Liste konnte nicht geladen werden (HTTP ${maybeHttpError.status}).`;
+          this.errorMessage = `User list could not be loaded (HTTP ${maybeHttpError.status}).`;
         } else {
           this.errorMessage =
-            'Die User-Liste konnte nicht geladen werden. Bitte pruefe, ob die API unter http://localhost:5175 laeuft.';
+            'User list could not be loaded. Please verify the API is running on http://localhost:5175.';
         }
         this.isLoading = false;
+        this.cdr.detectChanges();
       },
     });
   }

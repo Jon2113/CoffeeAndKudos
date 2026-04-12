@@ -54,40 +54,40 @@ export class CreateEntryComponent implements OnChanges {
   }
 
   get modalTitle(): string {
-    return this.entryType === 'borrow' ? 'Neuen Borrow anlegen' : 'Neuen Favor anlegen';
+    return this.entryType === 'borrow' ? 'Create a new borrow' : 'Create a new favor';
   }
 
   get titleLabel(): string {
-    return this.entryType === 'borrow' ? 'Titel oder Gegenstand' : 'Beschreibung';
+    return this.entryType === 'borrow' ? 'Title or item' : 'Description';
   }
 
   get titlePlaceholder(): string {
     return this.entryType === 'borrow'
-      ? 'z. B. Buch, To-Go Becher, Ladekabel'
-      : 'z. B. Kaffee ausgegeben';
+      ? 'e.g. Book, To-Go cup, Charging cable'
+      : 'e.g. Bought coffee';
   }
 
   get firstDirectionLabel(): string {
-    return this.entryType === 'borrow' ? 'Ich habe verliehen' : 'Ich habe geholfen';
+    return this.entryType === 'borrow' ? 'I lent this item' : 'I did the favor';
   }
 
   get secondDirectionLabel(): string {
-    return this.entryType === 'borrow' ? 'Ich habe geliehen' : 'Ich bekomme einen Gefallen';
+    return this.entryType === 'borrow' ? 'I borrowed this item' : 'I owe a favor';
   }
 
   get summaryText(): string {
     const selectedName =
-      this.users.find((user) => user.userId === this.otherUserId)?.username ?? 'die andere Person';
+      this.users.find((user) => user.userId === this.otherUserId)?.username ?? 'the other person';
 
     if (this.entryType === 'borrow') {
       return this.direction === 'outgoing'
-        ? `Der Borrow wird so gespeichert, dass ${selectedName} etwas von dir geliehen hat.`
-        : `Der Borrow wird so gespeichert, dass du etwas von ${selectedName} geliehen hast.`;
+        ? `This borrow will be saved as ${selectedName} borrowed something from you.`
+        : `This borrow will be saved as you borrowed something from ${selectedName}.`;
     }
 
     return this.direction === 'outgoing'
-      ? `Der Favor wird so gespeichert, dass ${selectedName} dir einen Gefallen schuldet.`
-      : `Der Favor wird so gespeichert, dass du ${selectedName} etwas schuldig bist.`;
+      ? `This favor will be saved as ${selectedName} owes you a favor.`
+      : `This favor will be saved as you owe ${selectedName} a favor.`;
   }
 
   chooseType(type: EntryType): void {
@@ -120,7 +120,7 @@ export class CreateEntryComponent implements OnChanges {
       },
       error: () => {
         this.errorMessage =
-          'Der Eintrag konnte nicht gespeichert werden. Bitte pruefe, ob die API laeuft und die Datenbank erreichbar ist.';
+          'The entry could not be saved. Please verify API and database connectivity.';
         this.isSaving = false;
       },
     });

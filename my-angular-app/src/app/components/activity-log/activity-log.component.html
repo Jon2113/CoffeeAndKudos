@@ -2,9 +2,9 @@
   <div class="log-header">
     <div>
       <p class="eyebrow">Activity Log</p>
-      <h2>Gemischte Chronik aus Borrows und Favors</h2>
+      <h2>Combined timeline of borrows and favors</h2>
     </div>
-    <span class="log-badge">{{ entries.length }} Eintraege</span>
+    <span class="log-badge">{{ entries.length }} entries</span>
   </div>
 
   <p *ngIf="actionError" class="status-banner error">{{ actionError }}</p>
@@ -26,11 +26,11 @@
         </div>
 
         <h3>{{ entry.title }}</h3>
-        <p>{{ entry.directionText }} mit {{ entry.counterpartyName }}</p>
+        <p>{{ entry.directionText }} with {{ entry.counterpartyName }}</p>
 
         <div class="log-meta">
-          <span>{{ entry.createdAt | date: 'dd.MM.yyyy' }}</span>
-          <span *ngIf="entry.dueDate">Due: {{ entry.dueDate | date: 'dd.MM.yyyy' }}</span>
+          <span>{{ entry.createdAt | date: 'MMM d, y' }}</span>
+          <span *ngIf="entry.dueDate">Due: {{ entry.dueDate | date: 'MMM d, y' }}</span>
         </div>
       </div>
 
@@ -42,9 +42,9 @@
       >
         {{
           busyEntryId === entry.id
-            ? 'Speichert...'
+            ? 'Saving...'
             : entry.isCompleted
-              ? 'Bereits erledigt'
+              ? 'Already completed'
               : entry.actionText
         }}
       </button>
@@ -53,9 +53,9 @@
 
   <ng-template #emptyState>
     <section class="empty-panel">
-      <p class="eyebrow">Noch leer</p>
-      <h2>Fuer diese Ansicht gibt es aktuell keine Eintraege.</h2>
-      <p>Lege ueber den Plus-Button einen neuen Borrow oder Favor an.</p>
+      <p class="eyebrow">No entries yet</p>
+      <h2>There are currently no entries for this view.</h2>
+      <p>Use the plus button to create a new borrow or favor.</p>
     </section>
   </ng-template>
 </section>

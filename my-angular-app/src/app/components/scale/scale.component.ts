@@ -22,14 +22,14 @@ export class ScaleComponent {
 
   get heading(): string {
     return this.otherUserName
-      ? `${this.currentUserName} und ${this.otherUserName} im Direktvergleich`
-      : `${this.currentUserName} im Gesamtueberblick`;
+      ? `${this.currentUserName} and ${this.otherUserName} in direct comparison`
+      : `${this.currentUserName} overview`;
   }
 
   get subline(): string {
     return this.otherUserName
-      ? 'Alle Werte zeigen nur eure direkte 1-on-1 Beziehung.'
-      : 'Die globale Scale nutzt die Zaehler aus dem User-Backend.';
+      ? 'All values include only your direct one-on-one relationship.'
+      : 'Global scale values come from user counters in the backend.';
   }
 
   get cards(): ScaleCardView[] {
@@ -42,27 +42,27 @@ export class ScaleComponent {
 
     return [
       {
-        label: 'Verliehen',
+        label: 'Lent',
         value: stats.countLent,
-        detail: 'Aktive Borrows, die von dir rausgegeben wurden.',
+        detail: 'Active borrows where you are the lender.',
         tone: 'amber',
       },
       {
-        label: 'Geliehen',
+        label: 'Borrowed',
         value: stats.countBorrowed,
-        detail: 'Aktive Borrows, die du von anderen hast.',
+        detail: 'Active borrows where you borrowed from others.',
         tone: 'clay',
       },
       {
-        label: 'Gefallen gegeben',
+        label: 'Favors given',
         value: stats.favorsGiven,
-        detail: 'Offene Favors, bei denen du geholfen hast.',
+        detail: 'Open favors where you helped someone else.',
         tone: 'teal',
       },
       {
-        label: 'Gefallen erhalten',
+        label: 'Favors received',
         value: stats.favorsTaken,
-        detail: 'Offene Favors, die du noch schuldig bist.',
+        detail: 'Open favors you still owe to someone else.',
         tone: 'olive',
       },
     ];

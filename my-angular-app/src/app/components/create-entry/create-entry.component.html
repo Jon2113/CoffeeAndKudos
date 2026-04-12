@@ -6,7 +6,7 @@
         <h2>{{ modalTitle }}</h2>
       </div>
 
-      <button type="button" class="ghost-button" (click)="closePanel()">Schliessen</button>
+      <button type="button" class="ghost-button" (click)="closePanel()">Close</button>
     </header>
 
     <div class="toggle-row">
@@ -59,9 +59,9 @@
 
     <div class="field-grid">
       <label class="field-stack">
-        <span>Gegenueber</span>
+        <span>Counterparty</span>
         <select [(ngModel)]="otherUserId" name="otherUserId">
-          <option value="">Bitte Person waehlen</option>
+          <option value="">Please choose a person</option>
           <option *ngFor="let user of users" [value]="user.userId">
             {{ user.username }}
           </option>
@@ -69,13 +69,13 @@
       </label>
 
       <label class="field-stack">
-        <span>Erfasst am</span>
+        <span>Recorded on</span>
         <input type="date" [(ngModel)]="createdOn" name="createdOn">
       </label>
     </div>
 
     <label *ngIf="entryType === 'borrow'" class="field-stack">
-      <span>Faelligkeitsdatum</span>
+      <span>Due date</span>
       <input type="date" [(ngModel)]="dueDate" name="dueDate">
     </label>
 
@@ -83,9 +83,9 @@
     <p *ngIf="errorMessage" class="status-banner error">{{ errorMessage }}</p>
 
     <footer class="composer-footer">
-      <button type="button" class="ghost-button" (click)="closePanel()">Abbrechen</button>
+      <button type="button" class="ghost-button" (click)="closePanel()">Cancel</button>
       <button type="button" class="primary-button" [disabled]="!canSave" (click)="saveEntry()">
-        {{ isSaving ? 'Speichert...' : 'Speichern' }}
+        {{ isSaving ? 'Saving...' : 'Save' }}
       </button>
     </footer>
   </section>
