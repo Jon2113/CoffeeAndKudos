@@ -2,10 +2,9 @@
   <section class="login-panel">
     <div class="intro-copy">
       <p class="eyebrow">Coffee &amp; Kudos</p>
-      <h1>Waehle aus, wer du heute bist.</h1>
+      <h1>Waehle deinen Benutzer aus.</h1>
       <p>
-        Der Einstieg ist bewusst leicht gehalten, genau wie in eurer Outline: User waehlen,
-        ID merken, Dashboard laden.
+        Der Einstieg ist bewusst leicht gehalten.
       </p>
     </div>
 
@@ -42,7 +41,7 @@
 
     <section *ngIf="!isLoading && !errorMessage && users.length === 0" class="empty-panel">
       <p class="eyebrow">Noch keine User</p>
-      <h2>Im Backend gibt es aktuell keine Personen zum Auswaehlen.</h2>
+      <h2>Im Backend gibt es aktuell keine Personen zur Auswahl.</h2>
       <p>Lege zuerst User ueber die API oder Datenbank an, dann erscheint hier die Auswahl.</p>
     </section>
   </section>
