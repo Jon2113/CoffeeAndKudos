@@ -45,6 +45,20 @@ export class BorrowService {
     return this.http.post<void>(this.apiUrl, payload);
   }
 
+  updateBorrow(
+    borrowId: string,
+    changes: Partial<Pick<Borrow, 'itemName' | 'createdAt' | 'dueDate'>>,
+  ): Observable<void> {
+    return this.http.get<Borrow>(`${this.apiUrl}/${borrowId}`).pipe(
+      switchMap((borrow) =>
+        this.http.put<void>(this.apiUrl, {
+          ...borrow,
+          ...changes,
+        }),
+      ),
+    );
+  }
+
   returnBorrow(borrowId: string): Observable<void> {
     return this.http.get<Borrow>(`${this.apiUrl}/${borrowId}`).pipe(
       switchMap((borrow) =>

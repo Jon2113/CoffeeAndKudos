@@ -1,12 +1,13 @@
-import { Component, Input } from '@angular/core';
+import { Component, EventEmitter, Input, Output } from '@angular/core';
 
-import { ScaleStats } from '../../models/dashboard.model';
+import { ScaleFilterKey, ScaleStats } from '../../models/dashboard.model';
 
 interface ScaleCardView {
   label: string;
   value: number;
   detail: string;
-  tone: 'amber' | 'clay' | 'teal' | 'olive';
+  tone: 'borrow' | 'favor';
+  filterKey: ScaleFilterKey;
 }
 
 @Component({
@@ -19,17 +20,19 @@ export class ScaleComponent {
   @Input() stats: ScaleStats | null = null;
   @Input() currentUserName = '';
   @Input() otherUserName = '';
+  @Input() activeFilter: ScaleFilterKey | null = null;
+  @Output() filterSelected = new EventEmitter<ScaleFilterKey>();
 
   get heading(): string {
     return this.otherUserName
-      ? `${this.currentUserName} and ${this.otherUserName} in direct comparison`
-      : `${this.currentUserName} overview`;
+      ? `${this.currentUserName} and ${this.otherUserName}`
+      : `${this.currentUserName} at a glance`;
   }
 
   get subline(): string {
     return this.otherUserName
-      ? 'All values include only your direct one-on-one relationship.'
-      : 'Global scale values come from user counters in the backend.';
+      ? 'See what is currently open between both of you, then tap a card to filter the timeline.'
+      : 'Here you can see everything you owe and what others currently owe you.';
   }
 
   get cards(): ScaleCardView[] {
@@ -45,26 +48,38 @@ export class ScaleComponent {
         label: 'Lent',
         value: stats.countLent,
         detail: 'Active borrows where you are the lender.',
-        tone: 'amber',
+        tone: 'borrow',
+        filterKey: 'countLent',
       },
       {
         label: 'Borrowed',
         value: stats.countBorrowed,
         detail: 'Active borrows where you borrowed from others.',
-        tone: 'clay',
+        tone: 'borrow',
+        filterKey: 'countBorrowed',
       },
       {
         label: 'Favors given',
         value: stats.favorsGiven,
         detail: 'Open favors where you helped someone else.',
-        tone: 'teal',
+        tone: 'favor',
+        filterKey: 'favorsGiven',
       },
       {
         label: 'Favors received',
         value: stats.favorsTaken,
         detail: 'Open favors you still owe to someone else.',
-        tone: 'olive',
+        tone: 'favor',
+        filterKey: 'favorsTaken',
       },
     ];
+  }
+
+  selectFilter(filterKey: ScaleFilterKey): void {
+    this.filterSelected.emit(filterKey);
+  }
+
+  isActive(filterKey: ScaleFilterKey): boolean {
+    return this.activeFilter === filterKey;
   }
 }

@@ -14,6 +14,12 @@ import { UserService } from '../../services/user.service';
 export class LoginComponent implements OnInit, OnDestroy {
   users: User[] = [];
   isLoading = true;
+  isCreatePanelOpen = false;
+  isCreatingUser = false;
+  newUsername = '';
+  newEmail = '';
+  createInfoMessage = '';
+  createErrorMessage = '';
   errorMessage = '';
   private hardTimeoutHandle: ReturnType<typeof setTimeout> | null = null;
 
@@ -28,6 +34,75 @@ export class LoginComponent implements OnInit, OnDestroy {
     // We always let the user reselect identity from the list.
     if (this.userService.getCurrentUserId()) {
       this.userService.logout();
+    }
+
+    this.loadUsers();
+  }
+
+  ngOnDestroy(): void {
+    this.clearHardTimeout();
+  }
+
+  selectUser(userId: string): void {
+    this.userService.login(userId);
+    void this.router.navigate(['/dashboard']);
+  }
+
+  trackByUserId(_index: number, user: User): string {
+    return user.userId;
+  }
+
+  get canCreateUser(): boolean {
+    return (
+      !this.isCreatingUser &&
+      Boolean(this.newUsername.trim()) &&
+      Boolean(this.newEmail.trim())
+    );
+  }
+
+  toggleCreatePanel(): void {
+    this.isCreatePanelOpen = !this.isCreatePanelOpen;
+    this.createErrorMessage = '';
+    this.createInfoMessage = '';
+  }
+
+  createUser(): void {
+    if (!this.canCreateUser) {
+      return;
+    }
+
+    this.isCreatingUser = true;
+    this.createErrorMessage = '';
+    this.createInfoMessage = '';
+
+    this.userService
+      .createUser({
+        username: this.newUsername,
+        email: this.newEmail,
+      })
+      .subscribe({
+        next: () => {
+          this.isCreatingUser = false;
+          this.newUsername = '';
+          this.newEmail = '';
+          this.createInfoMessage = 'User created successfully. You can now select the new profile.';
+          this.loadUsers(false);
+          this.cdr.detectChanges();
+        },
+        error: () => {
+          this.isCreatingUser = false;
+          this.createErrorMessage =
+            'The user could not be created. Please verify API and database connectivity.';
+          this.cdr.detectChanges();
+        },
+      });
+  }
+
+  private loadUsers(showLoadingState = true): void {
+    this.clearHardTimeout();
+    this.errorMessage = '';
+    if (showLoadingState) {
+      this.isLoading = true;
     }
 
     this.hardTimeoutHandle = setTimeout(() => {
@@ -62,19 +137,6 @@ export class LoginComponent implements OnInit, OnDestroy {
         this.cdr.detectChanges();
       },
     });
-  }
-
-  ngOnDestroy(): void {
-    this.clearHardTimeout();
-  }
-
-  selectUser(userId: string): void {
-    this.userService.login(userId);
-    void this.router.navigate(['/dashboard']);
-  }
-
-  trackByUserId(_index: number, user: User): string {
-    return user.userId;
   }
 
   private clearHardTimeout(): void {

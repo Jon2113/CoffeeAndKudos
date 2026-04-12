@@ -6,13 +6,20 @@
         <h2>{{ modalTitle }}</h2>
       </div>
 
-      <button type="button" class="ghost-button" (click)="closePanel()">Close</button>
+      <button
+        type="button"
+        class="icon-close-button"
+        aria-label="Close create entry panel"
+        (click)="closePanel()"
+      >
+        x
+      </button>
     </header>
 
     <div class="toggle-row">
       <button
         type="button"
-        class="toggle-chip"
+        class="toggle-chip favor"
         [class.active]="entryType === 'favor'"
         (click)="chooseType('favor')"
       >
@@ -20,7 +27,7 @@
       </button>
       <button
         type="button"
-        class="toggle-chip"
+        class="toggle-chip borrow"
         [class.active]="entryType === 'borrow'"
         (click)="chooseType('borrow')"
       >
@@ -57,27 +64,35 @@
       >
     </label>
 
-    <div class="field-grid">
-      <label class="field-stack">
-        <span>Counterparty</span>
-        <select [(ngModel)]="otherUserId" name="otherUserId">
-          <option value="">Please choose a person</option>
-          <option *ngFor="let user of users" [value]="user.userId">
-            {{ user.username }}
-          </option>
-        </select>
-      </label>
+    <label class="field-stack">
+      <span>People</span>
+      <div class="user-select-grid">
+        <button
+          *ngFor="let user of users"
+          type="button"
+          class="user-chip"
+          [class.is-selected]="isUserSelected(user.userId)"
+          (click)="toggleUserSelection(user.userId)"
+        >
+          <span class="check-indicator">{{ isUserSelected(user.userId) ? 'OK' : '+' }}</span>
+          <span>{{ user.username }}</span>
+        </button>
+      </div>
+    </label>
 
+    <p class="selection-summary">{{ selectedUsersSummary }}</p>
+
+    <div class="field-grid">
       <label class="field-stack">
         <span>Recorded on</span>
         <input type="date" [(ngModel)]="createdOn" name="createdOn">
       </label>
-    </div>
 
-    <label *ngIf="entryType === 'borrow'" class="field-stack">
-      <span>Due date</span>
-      <input type="date" [(ngModel)]="dueDate" name="dueDate">
-    </label>
+      <label *ngIf="entryType === 'borrow'" class="field-stack">
+        <span>Due date</span>
+        <input type="date" [(ngModel)]="dueDate" name="dueDate">
+      </label>
+    </div>
 
     <p class="composer-summary">{{ summaryText }}</p>
     <p *ngIf="errorMessage" class="status-banner error">{{ errorMessage }}</p>

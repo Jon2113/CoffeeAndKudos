@@ -40,6 +40,19 @@ export class UserService {
     return this.http.get<User[]>(this.apiUrl);
   }
 
+  createUser(payload: { username: string; email: string }): Observable<void> {
+    return this.http.post<void>(this.apiUrl, {
+      userId: crypto.randomUUID(),
+      username: payload.username.trim(),
+      email: payload.email.trim(),
+      createdAt: new Date().toISOString(),
+      countLent: 0,
+      countBorrowed: 0,
+      favorsGiven: 0,
+      favorsTaken: 0,
+    });
+  }
+
   getUserById(userId: string): Observable<User> {
     return this.http.get<User>(`${this.apiUrl}/${userId}`);
   }

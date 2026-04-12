@@ -5,9 +5,12 @@ export interface ScaleStats {
   favorsTaken: number;
 }
 
+export type ScaleFilterKey = 'countLent' | 'countBorrowed' | 'favorsGiven' | 'favorsTaken';
+
 export interface ActivityEntry {
   id: string;
   type: 'borrow' | 'favor';
+  direction: EntryDirection;
   title: string;
   counterpartyName: string;
   createdAt: string;

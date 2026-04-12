@@ -37,10 +37,51 @@
       </button>
     </div>
 
+    <section *ngIf="!isLoading && !errorMessage" class="create-user-panel">
+      <div class="create-user-header">
+        <div>
+          <p class="eyebrow">New Here</p>
+          <h2>Create a new user profile</h2>
+        </div>
+        <button type="button" class="ghost-button" (click)="toggleCreatePanel()">
+          {{ isCreatePanelOpen ? 'Hide form' : 'Create user' }}
+        </button>
+      </div>
+
+      <div *ngIf="isCreatePanelOpen" class="create-user-form">
+        <label class="field-stack">
+          <span>Username</span>
+          <input
+            type="text"
+            [(ngModel)]="newUsername"
+            name="newUsername"
+            placeholder="e.g. Diba"
+          >
+        </label>
+
+        <label class="field-stack">
+          <span>Email</span>
+          <input
+            type="email"
+            [(ngModel)]="newEmail"
+            name="newEmail"
+            placeholder="name@example.com"
+          >
+        </label>
+
+        <p *ngIf="createErrorMessage" class="status-banner error">{{ createErrorMessage }}</p>
+        <p *ngIf="createInfoMessage" class="status-banner success">{{ createInfoMessage }}</p>
+
+        <button type="button" class="primary-button" [disabled]="!canCreateUser" (click)="createUser()">
+          {{ isCreatingUser ? 'Creating...' : 'Create profile' }}
+        </button>
+      </div>
+    </section>
+
     <section *ngIf="!isLoading && !errorMessage && users.length === 0" class="empty-panel">
       <p class="eyebrow">No users yet</p>
-      <h2>No users are currently available in the backend.</h2>
-      <p>Create users via API or database and they will appear here.</p>
+      <h2>No users are currently available yet.</h2>
+      <p>Use the create-user form above and your profile will appear instantly.</p>
     </section>
   </section>
 </div>

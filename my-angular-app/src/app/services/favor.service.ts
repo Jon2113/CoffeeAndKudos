@@ -45,6 +45,20 @@ export class FavorService {
     return this.http.post<void>(this.apiUrl, payload);
   }
 
+  updateFavor(
+    favorId: string,
+    changes: Partial<Pick<Favor, 'description' | 'createdAt'>>,
+  ): Observable<void> {
+    return this.http.get<Favor>(`${this.apiUrl}/${favorId}`).pipe(
+      switchMap((favor) =>
+        this.http.put<void>(this.apiUrl, {
+          ...favor,
+          ...changes,
+        }),
+      ),
+    );
+  }
+
   settleFavor(favorId: string): Observable<void> {
     return this.http.get<Favor>(`${this.apiUrl}/${favorId}`).pipe(
       switchMap((favor) =>

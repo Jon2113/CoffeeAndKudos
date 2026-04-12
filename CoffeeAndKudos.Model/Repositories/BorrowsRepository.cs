@@ -104,7 +104,8 @@ lender_id = @lender_id,
 borrower_id = @borrower_id,
 item_name = @item_name,
 due_date = @due_date,
-returned_at = @returned_at
+returned_at = @returned_at,
+created_at = @created_at
 where borrow_id = @borrow_id";
 
             cmd.Parameters.AddWithValue("@lender_id", NpgsqlDbType.Uuid, borrow.LenderId);
@@ -114,6 +115,7 @@ where borrow_id = @borrow_id";
                 borrow.DueDate.HasValue ? borrow.DueDate.Value : DBNull.Value;
             cmd.Parameters.Add("@returned_at", NpgsqlDbType.TimestampTz).Value =
                 borrow.ReturnedAt.HasValue ? borrow.ReturnedAt.Value : DBNull.Value;
+            cmd.Parameters.AddWithValue("@created_at", NpgsqlDbType.TimestampTz, borrow.CreatedAt);
             cmd.Parameters.AddWithValue("@borrow_id", NpgsqlDbType.Uuid, borrow.BorrowId);
 
             return UpdateData(dbConn, cmd);

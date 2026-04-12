@@ -2,20 +2,107 @@
   <div class="log-header">
     <div>
       <p class="eyebrow">Activity Log</p>
-      <h2>Combined timeline of borrows and favors</h2>
+      <h2>Track your borrows and favors in one timeline</h2>
     </div>
-    <span class="log-badge">{{ entries.length }} entries</span>
+
+    <div class="log-header-actions">
+      <span class="log-badge">{{ filteredEntries.length }} entries</span>
+      <button type="button" class="ghost-button compact-button" (click)="toggleFilterPanel()">
+        {{ isFilterPanelOpen ? 'Hide filters' : 'Filter' }}
+      </button>
+      <button
+        type="button"
+        class="ghost-button compact-button"
+        [class.is-active]="isEditMode"
+        (click)="toggleEditMode()"
+      >
+        Edit
+      </button>
+    </div>
   </div>
+
+  <section *ngIf="isFilterPanelOpen" class="filter-panel">
+    <label class="field-stack">
+      <span>Activity</span>
+      <select [(ngModel)]="typeFilter">
+        <option value="all">All activity types</option>
+        <option value="borrow">Borrows only</option>
+        <option value="favor">Favors only</option>
+      </select>
+    </label>
+
+    <label class="field-stack">
+      <span>Direction</span>
+      <select [(ngModel)]="directionFilter">
+        <option value="all">All directions</option>
+        <option value="outgoing">You gave</option>
+        <option value="incoming">You received</option>
+      </select>
+    </label>
+
+    <label class="field-stack">
+      <span>Status</span>
+      <select [(ngModel)]="statusFilter">
+        <option value="all">Open and completed</option>
+        <option value="open">Open only</option>
+        <option value="completed">Completed only</option>
+      </select>
+    </label>
+
+    <label class="field-stack">
+      <span>Date range</span>
+      <select [(ngModel)]="dateWindowFilter">
+        <option value="all">All time</option>
+        <option value="today">Today</option>
+        <option value="last7">Last 7 days</option>
+        <option value="last30">Last 30 days</option>
+      </select>
+    </label>
+
+    <label class="field-stack">
+      <span>Sort by date</span>
+      <select [(ngModel)]="dateSort">
+        <option value="newest">Newest first</option>
+        <option value="oldest">Oldest first</option>
+        <option value="dueSoon">Due date (soonest)</option>
+      </select>
+    </label>
+
+    <div class="filter-footer">
+      <p *ngIf="activeFilterCount > 0">{{ activeFilterCount }} active filter(s)</p>
+      <button
+        *ngIf="hasAnyLocalFilter"
+        type="button"
+        class="ghost-button compact-button"
+        (click)="clearAllLocalFilters()"
+      >
+        Reset local filters
+      </button>
+    </div>
+  </section>
+
+  <section *ngIf="scaleFilter" class="scale-filter-banner">
+    <div>
+      <p class="eyebrow">Scale Filter Active</p>
+      <p>
+        {{ scaleFilterLabel }}<span *ngIf="selectedOtherUserName"> with {{ selectedOtherUserName }}</span>
+      </p>
+    </div>
+    <button type="button" class="ghost-button compact-button" (click)="removeScaleFilter()">
+      Clear scale filter
+    </button>
+  </section>
 
   <p *ngIf="actionError" class="status-banner error">{{ actionError }}</p>
 
-  <div *ngIf="entries.length > 0; else emptyState" class="log-list">
+  <div *ngIf="filteredEntries.length > 0; else emptyState" class="log-list">
     <article
-      *ngFor="let entry of entries; trackBy: trackByEntryId"
+      *ngFor="let entry of filteredEntries; trackBy: trackByEntryId"
       class="log-item"
       [class.borrow]="entry.accent === 'borrow'"
       [class.favor]="entry.accent === 'favor'"
       [class.is-complete]="entry.isCompleted"
+      [class.is-editing]="isEditing(entry.id)"
     >
       <div class="log-stripe"></div>
 
@@ -32,30 +119,95 @@
           <span>{{ entry.createdAt | date: 'MMM d, y' }}</span>
           <span *ngIf="entry.dueDate">Due: {{ entry.dueDate | date: 'MMM d, y' }}</span>
         </div>
+
+        <section *ngIf="isEditing(entry.id)" class="edit-panel">
+          <label class="field-stack">
+            <span>{{ entry.type === 'borrow' ? 'Item title' : 'Description' }}</span>
+            <input
+              type="text"
+              [(ngModel)]="editTitle"
+              [name]="'editTitle-' + entry.id"
+            >
+          </label>
+
+          <div class="edit-grid">
+            <label class="field-stack">
+              <span>Date</span>
+              <input
+                type="date"
+                [(ngModel)]="editCreatedOn"
+                [name]="'editCreatedOn-' + entry.id"
+              >
+            </label>
+
+            <label *ngIf="entry.type === 'borrow'" class="field-stack">
+              <span>Due date</span>
+              <input
+                type="date"
+                [(ngModel)]="editDueDate"
+                [name]="'editDueDate-' + entry.id"
+              >
+            </label>
+          </div>
+
+          <p *ngIf="editError" class="status-banner error">{{ editError }}</p>
+        </section>
       </div>
 
-      <button
-        type="button"
-        class="ghost-button"
-        [disabled]="entry.isCompleted || busyEntryId === entry.id"
-        (click)="completeEntry(entry)"
-      >
-        {{
-          busyEntryId === entry.id
-            ? 'Saving...'
-            : entry.isCompleted
-              ? 'Already completed'
-              : entry.actionText
-        }}
-      </button>
+      <div class="entry-actions">
+        <button
+          type="button"
+          class="ghost-button compact-button"
+          [disabled]="entry.isCompleted || busyEntryId === entry.id || isSavingEdit"
+          (click)="completeEntry(entry)"
+        >
+          {{
+            busyEntryId === entry.id
+              ? 'Saving...'
+              : entry.isCompleted
+                ? 'Already completed'
+                : entry.actionText
+          }}
+        </button>
+
+        <button
+          *ngIf="isEditMode && !isEditing(entry.id)"
+          type="button"
+          class="ghost-button compact-button"
+          [disabled]="isSavingEdit || busyEntryId === entry.id"
+          (click)="startEdit(entry)"
+        >
+          Edit
+        </button>
+
+        <button
+          *ngIf="isEditing(entry.id)"
+          type="button"
+          class="primary-button compact-button"
+          [disabled]="isSavingEdit || busyEntryId === entry.id"
+          (click)="saveEdit(entry)"
+        >
+          {{ isSavingEdit ? 'Updating...' : 'Save changes' }}
+        </button>
+
+        <button
+          *ngIf="isEditing(entry.id)"
+          type="button"
+          class="ghost-button compact-button"
+          [disabled]="isSavingEdit || busyEntryId === entry.id"
+          (click)="cancelEdit()"
+        >
+          Cancel
+        </button>
+      </div>
     </article>
   </div>
 
   <ng-template #emptyState>
     <section class="empty-panel">
-      <p class="eyebrow">No entries yet</p>
-      <h2>There are currently no entries for this view.</h2>
-      <p>Use the plus button to create a new borrow or favor.</p>
+      <p class="eyebrow">No Entries</p>
+      <h2>Nothing matches your current filters yet.</h2>
+      <p>Try clearing filters or create a new borrow or favor.</p>
     </section>
   </ng-template>
 </section>

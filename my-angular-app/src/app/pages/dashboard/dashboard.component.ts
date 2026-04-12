@@ -3,7 +3,7 @@ import { Router } from '@angular/router';
 import { forkJoin, timeout } from 'rxjs';
 
 import { Borrow } from '../../models/borrow.model';
-import { ActivityEntry, ScaleStats } from '../../models/dashboard.model';
+import { ActivityEntry, EntryDirection, ScaleFilterKey, ScaleStats } from '../../models/dashboard.model';
 import { Favor } from '../../models/favor.model';
 import { User } from '../../models/user.model';
 import { BorrowService } from '../../services/borrow.service';
@@ -31,6 +31,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
   };
   isLoading = true;
   isComposerOpen = false;
+  activeScaleFilter: ScaleFilterKey | null = null;
   errorMessage = '';
   private hardTimeoutHandle: ReturnType<typeof setTimeout> | null = null;
 
@@ -60,8 +61,8 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
   get viewDescription(): string {
     return this.selectedOtherUserName
-      ? `One-on-one view with ${this.selectedOtherUserName}. Scale values only include your direct relationship.`
-      : 'Global view across all borrows and favors related to your account.';
+      ? `This view only shows shared activity between you and ${this.selectedOtherUserName}.`
+      : 'This is your full overview across all borrows and favors currently connected to you.';
   }
 
   onFilterChange(otherUserId: string): void {
@@ -80,6 +81,14 @@ export class DashboardComponent implements OnInit, OnDestroy {
   handleEntrySaved(): void {
     this.isComposerOpen = false;
     this.refreshDashboard();
+  }
+
+  onScaleFilterSelected(filterKey: ScaleFilterKey): void {
+    this.activeScaleFilter = this.activeScaleFilter === filterKey ? null : filterKey;
+  }
+
+  clearScaleFilter(): void {
+    this.activeScaleFilter = null;
   }
 
   switchUser(): void {
@@ -171,10 +180,12 @@ export class DashboardComponent implements OnInit, OnDestroy {
       const counterpartyId =
         borrow.lenderId === this.currentUserId ? borrow.borrowerId : borrow.lenderId;
       const isOutgoing = borrow.lenderId === this.currentUserId;
+      const direction: EntryDirection = isOutgoing ? 'outgoing' : 'incoming';
 
       return {
         id: borrow.borrowId,
         type: 'borrow' as const,
+        direction,
         title: borrow.itemName,
         counterpartyName: userLookup.get(counterpartyId) ?? 'Unknown user',
         createdAt: borrow.createdAt,
@@ -195,10 +206,12 @@ export class DashboardComponent implements OnInit, OnDestroy {
       const counterpartyId =
         favor.creditorId === this.currentUserId ? favor.debtorId : favor.creditorId;
       const isOutgoing = favor.creditorId === this.currentUserId;
+      const direction: EntryDirection = isOutgoing ? 'outgoing' : 'incoming';
 
       return {
         id: favor.favorId,
         type: 'favor' as const,
+        direction,
         title: favor.description,
         counterpartyName: userLookup.get(counterpartyId) ?? 'Unknown user',
         createdAt: favor.createdAt,

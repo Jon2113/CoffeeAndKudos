@@ -1,5 +1,5 @@
 import { Component, EventEmitter, Input, OnChanges, Output, SimpleChanges } from '@angular/core';
-import { Observable } from 'rxjs';
+import { forkJoin } from 'rxjs';
 
 import { CreateBorrowRequest } from '../../models/borrow.model';
 import { EntryDirection, EntryType } from '../../models/dashboard.model';
@@ -26,7 +26,7 @@ export class CreateEntryComponent implements OnChanges {
   entryType: EntryType = 'favor';
   direction: EntryDirection = 'outgoing';
   title = '';
-  otherUserId = '';
+  selectedUserIds: string[] = [];
   createdOn = this.getTodayValue();
   dueDate = '';
   isSaving = false;
@@ -47,14 +47,14 @@ export class CreateEntryComponent implements OnChanges {
     return (
       !this.isSaving &&
       Boolean(this.currentUserId) &&
-      Boolean(this.otherUserId) &&
+      this.selectedUserIds.length > 0 &&
       Boolean(this.createdOn) &&
       Boolean(this.title.trim())
     );
   }
 
   get modalTitle(): string {
-    return this.entryType === 'borrow' ? 'Create a new borrow' : 'Create a new favor';
+    return this.entryType === 'borrow' ? 'Create borrows' : 'Create favors';
   }
 
   get titleLabel(): string {
@@ -64,7 +64,7 @@ export class CreateEntryComponent implements OnChanges {
   get titlePlaceholder(): string {
     return this.entryType === 'borrow'
       ? 'e.g. Book, To-Go cup, Charging cable'
-      : 'e.g. Bought coffee';
+      : 'e.g. Bought drinks';
   }
 
   get firstDirectionLabel(): string {
@@ -75,19 +75,38 @@ export class CreateEntryComponent implements OnChanges {
     return this.entryType === 'borrow' ? 'I borrowed this item' : 'I owe a favor';
   }
 
+  get selectedUsersSummary(): string {
+    if (this.selectedUserIds.length === 0) {
+      return 'Select at least one person to continue.';
+    }
+
+    if (this.selectedUserIds.length === 1) {
+      const name = this.resolveUserName(this.selectedUserIds[0]);
+      return `1 person selected: ${name}.`;
+    }
+
+    return `${this.selectedUserIds.length} people selected. One entry will be created for each person.`;
+  }
+
   get summaryText(): string {
-    const selectedName =
-      this.users.find((user) => user.userId === this.otherUserId)?.username ?? 'the other person';
+    if (this.selectedUserIds.length === 0) {
+      return 'Pick one or more people to preview how this entry will be stored.';
+    }
+
+    const recipientLabel =
+      this.selectedUserIds.length === 1
+        ? this.resolveUserName(this.selectedUserIds[0])
+        : `${this.selectedUserIds.length} selected people`;
 
     if (this.entryType === 'borrow') {
       return this.direction === 'outgoing'
-        ? `This borrow will be saved as ${selectedName} borrowed something from you.`
-        : `This borrow will be saved as you borrowed something from ${selectedName}.`;
+        ? `This will save borrows where ${recipientLabel} borrowed from you.`
+        : `This will save borrows where you borrowed from ${recipientLabel}.`;
     }
 
     return this.direction === 'outgoing'
-      ? `This favor will be saved as ${selectedName} owes you a favor.`
-      : `This favor will be saved as you owe ${selectedName} a favor.`;
+      ? `This will save favors where ${recipientLabel} owe(s) you.`
+      : `This will save favors where you owe ${recipientLabel}.`;
   }
 
   chooseType(type: EntryType): void {
@@ -100,6 +119,22 @@ export class CreateEntryComponent implements OnChanges {
     this.errorMessage = '';
   }
 
+  toggleUserSelection(userId: string): void {
+    if (this.isSaving) {
+      return;
+    }
+
+    if (this.selectedUserIds.includes(userId)) {
+      this.selectedUserIds = this.selectedUserIds.filter((id) => id !== userId);
+    } else {
+      this.selectedUserIds = [...this.selectedUserIds, userId];
+    }
+  }
+
+  isUserSelected(userId: string): boolean {
+    return this.selectedUserIds.includes(userId);
+  }
+
   saveEntry(): void {
     if (!this.canSave) {
       return;
@@ -108,12 +143,13 @@ export class CreateEntryComponent implements OnChanges {
     this.isSaving = true;
     this.errorMessage = '';
 
-    const request$: Observable<void> =
+    const requests = this.selectedUserIds.map((otherUserId) =>
       this.entryType === 'borrow'
-        ? this.borrowService.createBorrow(this.buildBorrowPayload())
-        : this.favorService.createFavor(this.buildFavorPayload());
+        ? this.borrowService.createBorrow(this.buildBorrowPayload(otherUserId))
+        : this.favorService.createFavor(this.buildFavorPayload(otherUserId)),
+    );
 
-    request$.subscribe({
+    forkJoin(requests).subscribe({
       next: () => {
         this.isSaving = false;
         this.saved.emit();
@@ -138,12 +174,12 @@ export class CreateEntryComponent implements OnChanges {
     event.stopPropagation();
   }
 
-  private buildBorrowPayload(): CreateBorrowRequest {
+  private buildBorrowPayload(otherUserId: string): CreateBorrowRequest {
     const isOutgoing = this.direction === 'outgoing';
 
     return {
-      lenderId: isOutgoing ? this.currentUserId : this.otherUserId,
-      borrowerId: isOutgoing ? this.otherUserId : this.currentUserId,
+      lenderId: isOutgoing ? this.currentUserId : otherUserId,
+      borrowerId: isOutgoing ? otherUserId : this.currentUserId,
       itemName: this.title.trim(),
       dueDate: this.dueDate || null,
       returnedAt: null,
@@ -151,12 +187,12 @@ export class CreateEntryComponent implements OnChanges {
     };
   }
 
-  private buildFavorPayload(): CreateFavorRequest {
+  private buildFavorPayload(otherUserId: string): CreateFavorRequest {
     const isOutgoing = this.direction === 'outgoing';
 
     return {
-      creditorId: isOutgoing ? this.currentUserId : this.otherUserId,
-      debtorId: isOutgoing ? this.otherUserId : this.currentUserId,
+      creditorId: isOutgoing ? this.currentUserId : otherUserId,
+      debtorId: isOutgoing ? otherUserId : this.currentUserId,
       description: this.title.trim(),
       isSettled: false,
       createdAt: this.toIsoTimestamp(this.createdOn),
@@ -167,11 +203,18 @@ export class CreateEntryComponent implements OnChanges {
     this.entryType = 'favor';
     this.direction = 'outgoing';
     this.title = '';
-    this.otherUserId = this.selectedOtherUserId ?? '';
+    this.selectedUserIds =
+      this.selectedOtherUserId && this.users.some((user) => user.userId === this.selectedOtherUserId)
+        ? [this.selectedOtherUserId]
+        : [];
     this.createdOn = this.getTodayValue();
     this.dueDate = '';
     this.isSaving = false;
     this.errorMessage = '';
+  }
+
+  private resolveUserName(userId: string): string {
+    return this.users.find((user) => user.userId === userId)?.username ?? 'Unknown person';
   }
 
   private getTodayValue(): string {

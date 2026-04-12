@@ -100,13 +100,15 @@ update public.favors set
 debtor_id = @debtor_id,
 creditor_id = @creditor_id,
 description = @description,
-is_settled = @is_settled
+is_settled = @is_settled,
+created_at = @created_at
 where favor_id = @favor_id";
 
             cmd.Parameters.AddWithValue("@debtor_id", NpgsqlDbType.Uuid, favor.DebtorId);
             cmd.Parameters.AddWithValue("@creditor_id", NpgsqlDbType.Uuid, favor.CreditorId);
             cmd.Parameters.AddWithValue("@description", NpgsqlDbType.Text, favor.Description);
             cmd.Parameters.AddWithValue("@is_settled", NpgsqlDbType.Boolean, favor.IsSettled);
+            cmd.Parameters.AddWithValue("@created_at", NpgsqlDbType.TimestampTz, favor.CreatedAt);
             cmd.Parameters.AddWithValue("@favor_id", NpgsqlDbType.Uuid, favor.FavorId);
 
             return UpdateData(dbConn, cmd);
