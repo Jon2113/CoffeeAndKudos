@@ -10,6 +10,8 @@ type ActivityStatusFilter = 'all' | 'open' | 'completed';
 type ActivityDateWindowFilter = 'all' | 'today' | 'last7' | 'last30';
 type ActivityDateSort = 'newest' | 'oldest' | 'dueSoon';
 
+// Shows the combined borrow/favor timeline with local filters, sorting, edit mode,
+// and scale-card filter integration from the parent dashboard.
 @Component({
   selector: 'app-activity-log',
   standalone: false,
@@ -17,11 +19,12 @@ type ActivityDateSort = 'newest' | 'oldest' | 'dueSoon';
   styleUrls: ['./activity-log.component.css'],
 })
 export class ActivityLogComponent implements OnChanges {
+  // Maps scale filter keys to human-readable labels shown in the active-filter banner.
   private static readonly FILTER_LABELS: Record<ScaleFilterKey, string> = {
-    countLent: 'Borrows you lent',
-    countBorrowed: 'Borrows you borrowed',
-    favorsGiven: 'Favors you gave',
-    favorsTaken: 'Favors you received',
+    countLent: 'Items lent by you',
+    countBorrowed: 'Items borrowed by you',
+    favorsGiven: 'Favors done by you',
+    favorsTaken: 'Favors owed to you',
   };
 
   @Input() entries: ActivityEntry[] = [];
@@ -55,6 +58,7 @@ export class ActivityLogComponent implements OnChanges {
   ) {}
 
   ngOnChanges(changes: SimpleChanges): void {
+    // Cancel any open inline edit if the entry being edited was deleted externally.
     if (
       changes['entries'] &&
       this.editingEntryId &&
@@ -64,6 +68,7 @@ export class ActivityLogComponent implements OnChanges {
     }
   }
 
+  // Applies all active filters in order, then sorts the remaining entries.
   get filteredEntries(): ActivityEntry[] {
     let visibleEntries = [...this.entries];
 
@@ -141,8 +146,7 @@ export class ActivityLogComponent implements OnChanges {
         this.entryUpdated.emit();
       },
       error: () => {
-        this.actionError =
-          'The entry could not be updated. Please verify the API is reachable.';
+        this.actionError = 'Could not update entry. Please check that the API is reachable.';
         this.busyEntryId = '';
         this.busyAction = '';
       },
@@ -154,9 +158,7 @@ export class ActivityLogComponent implements OnChanges {
       return;
     }
 
-    const isConfirmed = window.confirm(
-      `Delete "${entry.title}"? This action cannot be undone.`,
-    );
+    const isConfirmed = window.confirm(`Delete "${entry.title}"? This cannot be undone.`);
 
     if (!isConfirmed) {
       return;
@@ -178,8 +180,7 @@ export class ActivityLogComponent implements OnChanges {
         this.entryUpdated.emit();
       },
       error: () => {
-        this.actionError =
-          'The entry could not be deleted. Please verify the API is reachable.';
+        this.actionError = 'Could not delete entry. Please check that the API is reachable.';
         this.busyEntryId = '';
         this.busyAction = '';
       },
@@ -241,7 +242,7 @@ export class ActivityLogComponent implements OnChanges {
 
     const title = this.editTitle.trim();
     if (!title || !this.editCreatedOn) {
-      this.editError = 'Please provide a title and a valid date before saving.';
+      this.editError = 'Please fill in a title and a valid date before saving.';
       return;
     }
 
@@ -270,8 +271,7 @@ export class ActivityLogComponent implements OnChanges {
       },
       error: () => {
         this.isSavingEdit = false;
-        this.editError =
-          'The changes could not be saved. Please verify API and database connectivity.';
+        this.editError = 'Could not save changes. Please check API and database connectivity.';
       },
     });
   }
@@ -395,6 +395,7 @@ export class ActivityLogComponent implements OnChanges {
     return `${year}-${month}-${day}`;
   }
 
+  // Uses noon UTC to avoid off-by-one date shifts caused by timezone offsets.
   private toIsoTimestamp(dateValue: string): string {
     return new Date(`${dateValue}T12:00:00`).toISOString();
   }

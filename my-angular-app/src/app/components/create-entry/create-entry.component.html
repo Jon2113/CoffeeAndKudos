@@ -2,20 +2,21 @@
   <section class="composer-panel" (click)="stopPanelClick($event)">
     <header class="composer-header">
       <div>
-        <p class="eyebrow">Create Entry</p>
+        <p class="eyebrow">New Entry</p>
         <h2>{{ modalTitle }}</h2>
       </div>
 
       <button
         type="button"
         class="icon-close-button"
-        aria-label="Close create entry panel"
+        aria-label="Close panel"
         (click)="closePanel()"
       >
-        x
+        &times;
       </button>
     </header>
 
+    <!-- Entry type: favor or borrow -->
     <div class="toggle-row">
       <button
         type="button"
@@ -35,6 +36,7 @@
       </button>
     </div>
 
+    <!-- Direction: who gave/lent -->
     <div class="toggle-row direction">
       <button
         type="button"
@@ -65,7 +67,7 @@
     </label>
 
     <label class="field-stack">
-      <span>People</span>
+      <span>With who?</span>
       <div class="user-select-grid">
         <button
           *ngFor="let user of users"
@@ -74,7 +76,7 @@
           [class.is-selected]="isUserSelected(user.userId)"
           (click)="toggleUserSelection(user.userId)"
         >
-          <span class="check-indicator">{{ isUserSelected(user.userId) ? 'OK' : '+' }}</span>
+          <span class="check-indicator">{{ isUserSelected(user.userId) ? '✓' : '+' }}</span>
           <span>{{ user.username }}</span>
         </button>
       </div>
@@ -84,7 +86,7 @@
 
     <div class="field-grid">
       <label class="field-stack">
-        <span>Recorded on</span>
+        <span>Date</span>
         <input type="date" [(ngModel)]="createdOn" name="createdOn">
       </label>
 
@@ -100,7 +102,7 @@
     <footer class="composer-footer">
       <button type="button" class="ghost-button" (click)="closePanel()">Cancel</button>
       <button type="button" class="primary-button" [disabled]="!canSave" (click)="saveEntry()">
-        {{ isSaving ? 'Saving...' : 'Save' }}
+        {{ isSaving ? 'Saving…' : 'Save entry' }}
       </button>
     </footer>
   </section>

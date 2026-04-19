@@ -2,7 +2,7 @@
   <div class="log-header">
     <div>
       <p class="eyebrow">Activity Log</p>
-      <h2>Track your borrows and favors in one timeline</h2>
+      <h2>Everything in one place</h2>
     </div>
 
     <div class="log-header-actions">
@@ -25,9 +25,9 @@
     <label class="field-stack">
       <span>Activity</span>
       <select [(ngModel)]="typeFilter">
-        <option value="all">All activity types</option>
-        <option value="borrow">Borrows only</option>
-        <option value="favor">Favors only</option>
+        <option value="all">All types</option>
+        <option value="borrow">Borrows</option>
+        <option value="favor">Favors</option>
       </select>
     </label>
 
@@ -35,15 +35,15 @@
       <span>Direction</span>
       <select [(ngModel)]="directionFilter">
         <option value="all">All directions</option>
-        <option value="outgoing">You gave</option>
-        <option value="incoming">You received</option>
+        <option value="outgoing">You gave / lent</option>
+        <option value="incoming">You received / borrowed</option>
       </select>
     </label>
 
     <label class="field-stack">
       <span>Status</span>
       <select [(ngModel)]="statusFilter">
-        <option value="all">Open and completed</option>
+        <option value="all">All statuses</option>
         <option value="open">Open only</option>
         <option value="completed">Completed only</option>
       </select>
@@ -64,32 +64,32 @@
       <select [(ngModel)]="dateSort">
         <option value="newest">Newest first</option>
         <option value="oldest">Oldest first</option>
-        <option value="dueSoon">Due date (soonest)</option>
+        <option value="dueSoon">Due soonest</option>
       </select>
     </label>
 
     <div class="filter-footer">
-      <p *ngIf="activeFilterCount > 0">{{ activeFilterCount }} active filter(s)</p>
+      <p *ngIf="activeFilterCount > 0">{{ activeFilterCount }} {{ activeFilterCount === 1 ? 'filter' : 'filters' }} active</p>
       <button
         *ngIf="hasAnyLocalFilter"
         type="button"
         class="ghost-button compact-button"
         (click)="clearAllLocalFilters()"
       >
-        Reset local filters
+        Reset filters
       </button>
     </div>
   </section>
 
   <section *ngIf="hasScaleFilters" class="scale-filter-banner">
     <div>
-      <p class="eyebrow">Scale Filter Active</p>
+      <p class="eyebrow">Active Filter</p>
       <p>
         {{ scaleFilterLabel }}<span *ngIf="selectedOtherUserName"> with {{ selectedOtherUserName }}</span>
       </p>
     </div>
     <button type="button" class="ghost-button compact-button" (click)="removeScaleFilter()">
-      Clear scale filter
+      Clear filter
     </button>
   </section>
 
@@ -163,9 +163,9 @@
         >
           {{
             busyEntryId === entry.id && busyAction === 'complete'
-              ? 'Saving...'
+              ? 'Saving…'
               : entry.isCompleted
-                ? 'Already completed'
+                ? 'Completed'
                 : entry.actionText
           }}
         </button>
@@ -187,7 +187,7 @@
           [disabled]="isSavingEdit || busyEntryId === entry.id"
           (click)="deleteEntry(entry)"
         >
-          {{ busyEntryId === entry.id && busyAction === 'delete' ? 'Deleting...' : 'Delete' }}
+          {{ busyEntryId === entry.id && busyAction === 'delete' ? 'Deleting…' : 'Delete' }}
         </button>
 
         <button
@@ -197,7 +197,7 @@
           [disabled]="isSavingEdit || busyEntryId === entry.id"
           (click)="saveEdit(entry)"
         >
-          {{ isSavingEdit ? 'Updating...' : 'Save changes' }}
+          {{ isSavingEdit ? 'Saving…' : 'Save changes' }}
         </button>
 
         <button
@@ -215,9 +215,9 @@
 
   <ng-template #emptyState>
     <section class="empty-panel">
-      <p class="eyebrow">No Entries</p>
-      <h2>Nothing matches your current filters yet.</h2>
-      <p>Try clearing filters or create a new borrow or favor.</p>
+      <p class="eyebrow">Nothing here</p>
+      <h2>No entries match your filters.</h2>
+      <p>Clear your filters or add a new entry with the + button.</p>
     </section>
   </ng-template>
 </section>

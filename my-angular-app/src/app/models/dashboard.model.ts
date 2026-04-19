@@ -1,3 +1,4 @@
+// Aggregated counters shown in the four scale cards on the dashboard.
 export interface ScaleStats {
   countLent: number;
   countBorrowed: number;
@@ -7,6 +8,7 @@ export interface ScaleStats {
 
 export type ScaleFilterKey = 'countLent' | 'countBorrowed' | 'favorsGiven' | 'favorsTaken';
 
+// Unified view model that merges a Borrow or Favor into a single timeline item.
 export interface ActivityEntry {
   id: string;
   type: 'borrow' | 'favor';

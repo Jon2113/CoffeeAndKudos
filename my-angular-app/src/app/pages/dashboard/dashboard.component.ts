@@ -10,6 +10,8 @@ import { BorrowService } from '../../services/borrow.service';
 import { FavorService } from '../../services/favor.service';
 import { UserService } from '../../services/user.service';
 
+// Main dashboard page: loads the current user's borrows/favors, computes scale stats,
+// and coordinates the scale card, activity log, and create-entry composer components.
 @Component({
   selector: 'app-dashboard',
   standalone: false,
@@ -17,6 +19,7 @@ import { UserService } from '../../services/user.service';
   styleUrls: ['./dashboard.component.css'],
 })
 export class DashboardComponent implements OnInit, OnDestroy {
+  // Used to detect when all 4 cards are selected so we treat that as "no filter".
   private static readonly ALL_SCALE_FILTERS: ScaleFilterKey[] = [
     'countLent',
     'countBorrowed',
@@ -68,8 +71,8 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
   get viewDescription(): string {
     return this.selectedOtherUserName
-      ? `This view only shows shared activity between you and ${this.selectedOtherUserName}.`
-      : 'This is your full overview across all borrows and favors currently connected to you.';
+      ? `Showing only the history between you and ${this.selectedOtherUserName}.`
+      : 'Your complete overview — every borrow and favor connected to you.';
   }
 
   onFilterChange(otherUserId: string): void {
@@ -96,6 +99,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
       ? this.activeScaleFilters.filter((entry) => entry !== filterKey)
       : [...this.activeScaleFilters, filterKey];
 
+    // Selecting all 4 cards is equivalent to selecting none — clear to avoid confusion.
     this.activeScaleFilters =
       nextFilters.length === DashboardComponent.ALL_SCALE_FILTERS.length ? [] : nextFilters;
   }
@@ -119,6 +123,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
     this.errorMessage = '';
     this.cdr.detectChanges();
 
+    // Hard timeout as a last-resort guard; the RxJS timeout(10000) below fires first.
     this.hardTimeoutHandle = setTimeout(() => {
       if (this.isLoading) {
         this.errorMessage =
@@ -142,6 +147,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
           this.currentUser = currentUser;
           this.otherUsers = users.filter((user) => user.userId !== this.currentUserId);
 
+          // Validate the selected filter — the user may have been deleted since the last load.
           const validFilter = this.otherUsers.some(
             (user) => user.userId === this.selectedOtherUserId,
           )
@@ -152,9 +158,10 @@ export class DashboardComponent implements OnInit, OnDestroy {
             this.selectedOtherUserId = '';
           }
 
+          // Always compute from live data so counters stay accurate after returns/settles.
           this.scaleStats = validFilter
             ? this.userService.build1on1Scales(this.currentUserId, validFilter, borrows, favors)
-            : this.userService.mapUserToScaleStats(currentUser);
+            : this.userService.buildGlobalScales(this.currentUserId, borrows, favors);
 
           this.activityEntries = this.buildActivityEntries(borrows, favors, users);
           this.isLoading = false;
@@ -164,13 +171,11 @@ export class DashboardComponent implements OnInit, OnDestroy {
           this.clearHardTimeout();
           const maybeHttpError = error as { status?: number; name?: string };
           if (maybeHttpError?.name === 'TimeoutError') {
-            this.errorMessage =
-              'Dashboard loading timed out. At least one API request did not respond.';
+            this.errorMessage = 'Request timed out — at least one API call did not respond in time.';
           } else if (maybeHttpError?.status) {
-            this.errorMessage = `Dashboard could not be loaded (HTTP ${maybeHttpError.status}).`;
+            this.errorMessage = `Could not load dashboard (HTTP ${maybeHttpError.status}).`;
           } else {
-            this.errorMessage =
-              'Dashboard could not be loaded. Please check API, database, and Angular proxy settings.';
+            this.errorMessage = 'Could not load dashboard. Please check the API, database, and proxy.';
           }
           this.isLoading = false;
           this.cdr.detectChanges();
@@ -182,6 +187,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
     this.clearHardTimeout();
   }
 
+  // Merges borrows and favors into a unified ActivityEntry list, sorted newest-first.
   private buildActivityEntries(
     borrows: Borrow[],
     favors: Favor[],
@@ -209,7 +215,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
           : borrow.dueDate
             ? `Due on ${this.formatDate(borrow.dueDate)}`
             : 'Open',
-        directionText: isOutgoing ? 'You lent this item' : 'You borrowed this item',
+        directionText: isOutgoing ? 'You lent this' : 'You borrowed this',
         actionText: 'Mark as returned',
         accent: 'borrow' as const,
       };
@@ -231,9 +237,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
         dueDate: null,
         isCompleted: favor.isSettled,
         statusText: favor.isSettled ? 'Settled' : 'Open',
-        directionText: isOutgoing
-          ? 'You did a favor'
-          : 'You received a favor',
+        directionText: isOutgoing ? 'You did this favor' : 'You received this favor',
         actionText: 'Mark as settled',
         accent: 'favor' as const,
       };

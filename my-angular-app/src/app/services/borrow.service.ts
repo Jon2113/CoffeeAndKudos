@@ -7,6 +7,8 @@ import { environment } from '../../environments/environment';
 import { Borrow, CreateBorrowRequest } from '../models/borrow.model';
 import { CURRENT_USER_STORAGE_KEY } from './session.constants';
 
+// Manages borrow CRUD. Filtering to the current user happens client-side since the API
+// returns all borrows; this avoids a server-side query parameter dependency.
 @Injectable({
   providedIn: 'root',
 })
@@ -15,6 +17,8 @@ export class BorrowService {
 
   constructor(private readonly http: HttpClient) {}
 
+  // Fetches all borrows, then filters to those involving the current user.
+  // Pass otherUserId to further restrict to a specific pair (1-on-1 view).
   getBorrows(otherUserId?: string): Observable<Borrow[]> {
     return this.getCurrentUserId$().pipe(
       switchMap((currentUserId) =>
@@ -63,6 +67,7 @@ export class BorrowService {
     return this.http.delete<void>(`${this.apiUrl}/${borrowId}`);
   }
 
+  // Marks a borrow as returned by setting returnedAt to now.
   returnBorrow(borrowId: string): Observable<void> {
     return this.http.get<Borrow>(`${this.apiUrl}/${borrowId}`).pipe(
       switchMap((borrow) =>

@@ -8,6 +8,8 @@ import { User } from '../../models/user.model';
 import { BorrowService } from '../../services/borrow.service';
 import { FavorService } from '../../services/favor.service';
 
+// Modal panel for creating new borrows or favors.
+// Supports multi-user selection: one entry is created per selected user.
 @Component({
   selector: 'app-create-entry',
   standalone: false,
@@ -38,6 +40,7 @@ export class CreateEntryComponent implements OnChanges {
   ) {}
 
   ngOnChanges(changes: SimpleChanges): void {
+    // Reset the form each time the panel is opened so stale values don't persist.
     if (changes['isOpen'] && this.isOpen) {
       this.resetForm();
     }
@@ -54,59 +57,58 @@ export class CreateEntryComponent implements OnChanges {
   }
 
   get modalTitle(): string {
-    return this.entryType === 'borrow' ? 'Create borrows' : 'Create favors';
+    return this.entryType === 'borrow' ? 'New borrow' : 'New favor';
   }
 
   get titleLabel(): string {
-    return this.entryType === 'borrow' ? 'Title or item' : 'Description';
+    return this.entryType === 'borrow' ? 'Item name' : 'Description';
   }
 
   get titlePlaceholder(): string {
     return this.entryType === 'borrow'
-      ? 'e.g. Book, To-Go cup, Charging cable'
-      : 'e.g. Bought drinks';
+      ? 'e.g. Charger, Book, To-go cup'
+      : 'e.g. Bought drinks, Covered shift';
   }
 
   get firstDirectionLabel(): string {
-    return this.entryType === 'borrow' ? 'I lent this item' : 'I did the favor';
+    return this.entryType === 'borrow' ? 'I lent it' : 'I did it';
   }
 
   get secondDirectionLabel(): string {
-    return this.entryType === 'borrow' ? 'I borrowed this item' : 'I owe a favor';
+    return this.entryType === 'borrow' ? 'I borrowed it' : 'I owe it';
   }
 
   get selectedUsersSummary(): string {
     if (this.selectedUserIds.length === 0) {
-      return 'Select at least one person to continue.';
+      return 'Pick at least one person to continue.';
     }
 
     if (this.selectedUserIds.length === 1) {
-      const name = this.resolveUserName(this.selectedUserIds[0]);
-      return `1 person selected: ${name}.`;
+      return `Selected: ${this.resolveUserName(this.selectedUserIds[0])}.`;
     }
 
-    return `${this.selectedUserIds.length} people selected. One entry will be created for each person.`;
+    return `${this.selectedUserIds.length} people selected — one entry per person.`;
   }
 
   get summaryText(): string {
     if (this.selectedUserIds.length === 0) {
-      return 'Pick one or more people to preview how this entry will be stored.';
+      return 'Select a person above to see a preview of what will be saved.';
     }
 
     const recipientLabel =
       this.selectedUserIds.length === 1
         ? this.resolveUserName(this.selectedUserIds[0])
-        : `${this.selectedUserIds.length} selected people`;
+        : `${this.selectedUserIds.length} people`;
 
     if (this.entryType === 'borrow') {
       return this.direction === 'outgoing'
-        ? `This will save borrows where ${recipientLabel} borrowed from you.`
-        : `This will save borrows where you borrowed from ${recipientLabel}.`;
+        ? `${recipientLabel} borrowed from you — you are the lender.`
+        : `You borrowed from ${recipientLabel} — they are the lender.`;
     }
 
     return this.direction === 'outgoing'
-      ? `This will save favors where ${recipientLabel} owe(s) you.`
-      : `This will save favors where you owe ${recipientLabel}.`;
+      ? `You did a favor for ${recipientLabel} — they owe you.`
+      : `${recipientLabel} did a favor for you — you owe them.`;
   }
 
   chooseType(type: EntryType): void {
@@ -143,6 +145,7 @@ export class CreateEntryComponent implements OnChanges {
     this.isSaving = true;
     this.errorMessage = '';
 
+    // Fire all create requests in parallel; emit saved only when every one succeeds.
     const requests = this.selectedUserIds.map((otherUserId) =>
       this.entryType === 'borrow'
         ? this.borrowService.createBorrow(this.buildBorrowPayload(otherUserId))
@@ -155,8 +158,7 @@ export class CreateEntryComponent implements OnChanges {
         this.saved.emit();
       },
       error: () => {
-        this.errorMessage =
-          'The entry could not be saved. Please verify API and database connectivity.';
+        this.errorMessage = 'Could not save entry. Please check API and database connectivity.';
         this.isSaving = false;
       },
     });

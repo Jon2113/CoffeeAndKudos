@@ -1,20 +1,20 @@
 <div class="page-shell dashboard-shell">
   <section class="hero-panel">
     <div class="hero-copy">
-      <p class="eyebrow">Coffee &amp; Kudos Dashboard</p>
-      <h1 *ngIf="currentUser">{{ currentUser.username }}, your balance is ready.</h1>
+      <p class="eyebrow">Dashboard</p>
+      <h1 *ngIf="currentUser">{{ currentUser.username }}'s balance sheet.</h1>
       <p>{{ viewDescription }}</p>
     </div>
 
     <div class="hero-controls">
       <label class="field-card">
-        <span>Filter by person</span>
+        <span>Show activity with</span>
         <select
           [(ngModel)]="selectedOtherUserId"
           name="selectedOtherUserId"
           (ngModelChange)="onFilterChange($event)"
         >
-          <option value="">All people</option>
+          <option value="">Everyone</option>
           <option *ngFor="let user of otherUsers" [value]="user.userId">
             {{ user.username }}
           </option>
@@ -22,7 +22,7 @@
       </label>
 
       <button type="button" class="secondary-button" (click)="switchUser()">
-        Switch user
+        Switch profile
       </button>
     </div>
   </section>
@@ -32,8 +32,8 @@
   <section *ngIf="isLoading" class="loading-card">
     <div class="spinner"></div>
     <div>
-      <p class="eyebrow">Sync in progress</p>
-      <h2>Loading users, logs, and scale data.</h2>
+      <p class="eyebrow">One moment</p>
+      <h2>Loading your data…</h2>
     </div>
   </section>
 

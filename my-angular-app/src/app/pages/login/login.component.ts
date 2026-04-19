@@ -5,6 +5,8 @@ import { timeout } from 'rxjs';
 import { User } from '../../models/user.model';
 import { UserService } from '../../services/user.service';
 
+// Login page: lists all users and lets the visitor pick an identity.
+// Also handles user creation, inline editing, and deletion.
 @Component({
   selector: 'app-login',
   standalone: false,
@@ -37,8 +39,7 @@ export class LoginComponent implements OnInit, OnDestroy {
   ) {}
 
   ngOnInit(): void {
-    // Avoid stale localStorage sessions blocking the login screen.
-    // We always let the user reselect identity from the list.
+    // Always clear any existing session so the user must explicitly reselect their identity.
     if (this.userService.getCurrentUserId()) {
       this.userService.logout();
     }
@@ -103,7 +104,7 @@ export class LoginComponent implements OnInit, OnDestroy {
           this.isCreatingUser = false;
           this.newUsername = '';
           this.newEmail = '';
-          this.createInfoMessage = 'User created successfully. You can now select the new profile.';
+          this.createInfoMessage = 'Profile created — select it below to open your dashboard.';
           this.manageErrorMessage = '';
           this.manageInfoMessage = '';
           this.loadUsers(false);
@@ -111,8 +112,7 @@ export class LoginComponent implements OnInit, OnDestroy {
         },
         error: () => {
           this.isCreatingUser = false;
-          this.createErrorMessage =
-            'The user could not be created. Please verify API and database connectivity.';
+          this.createErrorMessage = 'Could not create profile. Please check API and database connectivity.';
           this.cdr.detectChanges();
         },
       });
@@ -158,7 +158,7 @@ export class LoginComponent implements OnInit, OnDestroy {
       .subscribe({
         next: () => {
           this.isSavingUserChanges = false;
-          this.manageInfoMessage = 'User profile updated successfully.';
+          this.manageInfoMessage = 'Profile updated successfully.';
           this.manageErrorMessage = '';
           this.cancelUserEdit();
           this.loadUsers(false);
@@ -166,8 +166,7 @@ export class LoginComponent implements OnInit, OnDestroy {
         },
         error: () => {
           this.isSavingUserChanges = false;
-          this.manageErrorMessage =
-            'The user could not be updated. Please verify API and database connectivity.';
+          this.manageErrorMessage = 'Could not update profile. Please check API and database connectivity.';
           this.cdr.detectChanges();
         },
       });
@@ -179,7 +178,7 @@ export class LoginComponent implements OnInit, OnDestroy {
     }
 
     const isConfirmed = window.confirm(
-      `Delete user "${user.username}"? This action cannot be undone.`,
+      `Remove "${user.username}"? This cannot be undone.`,
     );
 
     if (!isConfirmed) {
@@ -196,15 +195,14 @@ export class LoginComponent implements OnInit, OnDestroy {
         if (this.editingUserId === user.userId) {
           this.cancelUserEdit();
         }
-        this.manageInfoMessage = 'User deleted successfully.';
+        this.manageInfoMessage = 'Profile removed.';
         this.manageErrorMessage = '';
         this.loadUsers(false);
         this.cdr.detectChanges();
       },
       error: () => {
         this.busyDeleteUserId = '';
-        this.manageErrorMessage =
-          'The user could not be deleted. Please verify API and database connectivity.';
+        this.manageErrorMessage = 'Could not remove profile. Please check API and database connectivity.';
         this.cdr.detectChanges();
       },
     });
@@ -224,7 +222,7 @@ export class LoginComponent implements OnInit, OnDestroy {
     this.hardTimeoutHandle = setTimeout(() => {
       if (this.isLoading) {
         this.errorMessage =
-          'The request is taking too long. Please verify the frontend proxy and API are running.';
+          'This is taking longer than expected. Please check that the API and frontend proxy are running.';
         this.isLoading = false;
         this.cdr.detectChanges();
       }
@@ -242,12 +240,12 @@ export class LoginComponent implements OnInit, OnDestroy {
         const maybeHttpError = error as { status?: number; name?: string };
         if (maybeHttpError?.name === 'TimeoutError') {
           this.errorMessage =
-            'Timeout while loading users. Please check API, proxy, and database connectivity.';
+            'Request timed out — please check API, proxy, and database connectivity.';
         } else if (maybeHttpError?.status) {
-          this.errorMessage = `User list could not be loaded (HTTP ${maybeHttpError.status}).`;
+          this.errorMessage = `Could not load profiles (HTTP ${maybeHttpError.status}).`;
         } else {
           this.errorMessage =
-            'User list could not be loaded. Please verify the API is running on http://localhost:5175.';
+            'Could not load profiles. Please check that the API is running.';
         }
         this.isLoading = false;
         this.cdr.detectChanges();

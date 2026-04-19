@@ -2,24 +2,26 @@
   <section class="login-panel">
     <div class="intro-copy">
       <p class="eyebrow">Coffee &amp; Kudos</p>
-      <h1>Choose your user.</h1>
-      <p>Start by selecting who you are. We save your ID and load your dashboard.</p>
+      <h1>Pick your profile.</h1>
+      <p>Select a profile below and we'll open your personal dashboard right away.</p>
     </div>
 
     <section *ngIf="isLoading" class="loading-card">
       <div class="spinner"></div>
       <div>
-        <p class="eyebrow">Login</p>
-        <h2>Loading user list.</h2>
+        <p class="eyebrow">One moment</p>
+        <h2>Loading profiles…</h2>
       </div>
     </section>
 
     <p *ngIf="errorMessage" class="status-banner error">{{ errorMessage }}</p>
 
     <div *ngIf="!isLoading && !errorMessage && users.length > 0" class="user-grid">
+      <!-- Clicking the card opens the dashboard for that user -->
       <article
         *ngFor="let user of users; trackBy: trackByUserId"
         class="user-card"
+        (click)="selectUser(user.userId)"
       >
         <span class="user-avatar">{{ user.username.charAt(0) | uppercase }}</span>
 
@@ -32,10 +34,8 @@
           <span>{{ user.countLent }} lent</span>
           <span>{{ user.favorsGiven }} favors given</span>
         </div>
-        <div class="user-actions">
-          <button type="button" class="primary-button compact-button" (click)="selectUser(user.userId)">
-            Open dashboard
-          </button>
+        <!-- Stop propagation so Edit/Delete don't also trigger card navigation -->
+        <div class="user-actions" (click)="$event.stopPropagation()">
           <button
             type="button"
             class="ghost-button compact-button"
@@ -50,11 +50,12 @@
             [disabled]="isSavingUserChanges || busyDeleteUserId === user.userId"
             (click)="deleteUser(user)"
           >
-            {{ busyDeleteUserId === user.userId ? 'Deleting...' : 'Delete' }}
+            {{ busyDeleteUserId === user.userId ? 'Deleting…' : 'Delete' }}
           </button>
         </div>
 
-        <section *ngIf="isEditingUser(user.userId)" class="edit-user-form">
+        <!-- Inline edit form — also blocked from triggering card navigation -->
+        <section *ngIf="isEditingUser(user.userId)" class="edit-user-form" (click)="$event.stopPropagation()">
           <label class="field-stack">
             <span>Username</span>
             <input
@@ -80,7 +81,7 @@
               [disabled]="!canSaveUserEdit || editingUserId !== user.userId"
               (click)="saveUserEdit(user)"
             >
-              {{ isSavingUserChanges ? 'Saving...' : 'Save changes' }}
+              {{ isSavingUserChanges ? 'Saving…' : 'Save' }}
             </button>
             <button
               type="button"
@@ -101,11 +102,11 @@
     <section *ngIf="!isLoading && !errorMessage" class="create-user-panel">
       <div class="create-user-header">
         <div>
-          <p class="eyebrow">New Here</p>
-          <h2>Create a new user profile</h2>
+          <p class="eyebrow">New Profile</p>
+          <h2>Add a profile</h2>
         </div>
         <button type="button" class="ghost-button" (click)="toggleCreatePanel()">
-          {{ isCreatePanelOpen ? 'Hide form' : 'Create user' }}
+          {{ isCreatePanelOpen ? 'Hide' : 'Add profile' }}
         </button>
       </div>
 
@@ -134,15 +135,15 @@
         <p *ngIf="createInfoMessage" class="status-banner success">{{ createInfoMessage }}</p>
 
         <button type="button" class="primary-button" [disabled]="!canCreateUser" (click)="createUser()">
-          {{ isCreatingUser ? 'Creating...' : 'Create profile' }}
+          {{ isCreatingUser ? 'Creating…' : 'Create profile' }}
         </button>
       </div>
     </section>
 
     <section *ngIf="!isLoading && !errorMessage && users.length === 0" class="empty-panel">
-      <p class="eyebrow">No users yet</p>
-      <h2>No users are currently available yet.</h2>
-      <p>Use the create-user form above and your profile will appear instantly.</p>
+      <p class="eyebrow">Empty</p>
+      <h2>No profiles yet.</h2>
+      <p>Create a profile using the form above — it'll appear here right away.</p>
     </section>
   </section>
 </div>

@@ -38,6 +38,7 @@
   background: linear-gradient(180deg, rgba(255, 253, 248, 0.98), rgba(245, 232, 214, 0.95));
   color: var(--ink);
   text-align: left;
+  cursor: pointer;
   transition:
     transform 180ms ease,
     box-shadow 180ms ease,

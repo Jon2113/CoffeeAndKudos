@@ -10,6 +10,8 @@ interface ScaleCardView {
   filterKey: ScaleFilterKey;
 }
 
+// Displays 4 stat cards (lent, borrowed, favors given, favors received).
+// Cards are clickable to toggle activity-log filters in the parent dashboard.
 @Component({
   selector: 'app-scale',
   standalone: false,
@@ -31,8 +33,8 @@ export class ScaleComponent {
 
   get subline(): string {
     return this.otherUserName
-      ? 'See what is currently open between both of you, then tap a card to filter the timeline.'
-      : 'Here you can see everything you owe and what others currently owe you.';
+      ? "What's open between you two. Tap a card to filter the timeline below."
+      : 'What you gave and what you are owed — tap a card to filter the timeline.';
   }
 
   get cards(): ScaleCardView[] {
@@ -47,28 +49,28 @@ export class ScaleComponent {
       {
         label: 'Lent',
         value: stats.countLent,
-        detail: 'Active borrows where you are the lender.',
+        detail: "Items you lent that haven't been returned yet.",
         tone: 'borrow',
         filterKey: 'countLent',
       },
       {
         label: 'Borrowed',
         value: stats.countBorrowed,
-        detail: 'Active borrows where you borrowed from others.',
+        detail: "Items you borrowed that you haven't returned yet.",
         tone: 'borrow',
         filterKey: 'countBorrowed',
       },
       {
         label: 'Favors given',
         value: stats.favorsGiven,
-        detail: 'Open favors where you helped someone else.',
+        detail: "Favors you've done that haven't been settled yet.",
         tone: 'favor',
         filterKey: 'favorsGiven',
       },
       {
         label: 'Favors received',
         value: stats.favorsTaken,
-        detail: 'Open favors you still owe to someone else.',
+        detail: 'Favors others did for you that are still open.',
         tone: 'favor',
         filterKey: 'favorsTaken',
       },
@@ -87,6 +89,7 @@ export class ScaleComponent {
     return this.activeFilters.includes(filterKey);
   }
 
+  // A card is muted when filters are active but this card is not one of them.
   isMuted(filterKey: ScaleFilterKey): boolean {
     return this.hasActiveFilters && !this.isActive(filterKey);
   }

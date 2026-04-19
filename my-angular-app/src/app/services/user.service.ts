@@ -1,28 +1,22 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { Observable, forkJoin, throwError } from 'rxjs';
-import { map } from 'rxjs/operators';
+import { Observable, throwError } from 'rxjs';
 
 import { environment } from '../../environments/environment';
 import { Borrow } from '../models/borrow.model';
 import { ScaleStats } from '../models/dashboard.model';
 import { Favor } from '../models/favor.model';
 import { User } from '../models/user.model';
-import { BorrowService } from './borrow.service';
-import { FavorService } from './favor.service';
 import { CURRENT_USER_STORAGE_KEY } from './session.constants';
 
+// Handles user auth (session storage), user CRUD, and scale stat calculations.
 @Injectable({
   providedIn: 'root',
 })
 export class UserService {
   private readonly apiUrl = `${environment.apiBaseUrl}/User`;
 
-  constructor(
-    private readonly http: HttpClient,
-    private readonly borrowService: BorrowService,
-    private readonly favorService: FavorService,
-  ) {}
+  constructor(private readonly http: HttpClient) {}
 
   login(userId: string): void {
     localStorage.setItem(CURRENT_USER_STORAGE_KEY, userId);
@@ -40,6 +34,7 @@ export class UserService {
     return this.http.get<User[]>(this.apiUrl);
   }
 
+  // Counter fields are initialised to 0; the dashboard recomputes them live from borrows/favors.
   createUser(payload: { username: string; email: string }): Observable<void> {
     return this.http.post<void>(this.apiUrl, {
       userId: crypto.randomUUID(),
@@ -77,36 +72,21 @@ export class UserService {
       : throwError(() => new Error('No current user selected.'));
   }
 
-  getGlobalScales(): Observable<ScaleStats> {
-    return this.getCurrentUser().pipe(map((user) => this.mapUserToScaleStats(user)));
-  }
+  // Computes global scale stats from live borrow/favor arrays (no DB-stored counters).
+  // Only counts items that are not yet returned/settled (i.e. still active).
+  buildGlobalScales(currentUserId: string, borrows: Borrow[], favors: Favor[]): ScaleStats {
+    const activeBorrows = borrows.filter((b) => !b.returnedAt);
+    const activeFavors = favors.filter((f) => !f.isSettled);
 
-  get1on1Scales(otherUserId: string): Observable<ScaleStats> {
-    const currentUserId = this.getCurrentUserId();
-
-    if (!currentUserId) {
-      return throwError(() => new Error('No current user selected.'));
-    }
-
-    return forkJoin({
-      borrows: this.borrowService.getBorrows(otherUserId),
-      favors: this.favorService.getFavors(otherUserId),
-    }).pipe(
-      map(({ borrows, favors }) =>
-        this.build1on1Scales(currentUserId, otherUserId, borrows, favors),
-      ),
-    );
-  }
-
-  mapUserToScaleStats(user: User): ScaleStats {
     return {
-      countLent: user.countLent,
-      countBorrowed: user.countBorrowed,
-      favorsGiven: user.favorsGiven,
-      favorsTaken: user.favorsTaken,
+      countLent: activeBorrows.filter((b) => b.lenderId === currentUserId).length,
+      countBorrowed: activeBorrows.filter((b) => b.borrowerId === currentUserId).length,
+      favorsGiven: activeFavors.filter((f) => f.creditorId === currentUserId).length,
+      favorsTaken: activeFavors.filter((f) => f.debtorId === currentUserId).length,
     };
   }
 
+  // Computes scale stats scoped to two specific users from already-fetched borrow/favor arrays.
   build1on1Scales(
     currentUserId: string,
     otherUserId: string,

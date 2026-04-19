@@ -7,6 +7,7 @@ import { environment } from '../../environments/environment';
 import { CreateFavorRequest, Favor } from '../models/favor.model';
 import { CURRENT_USER_STORAGE_KEY } from './session.constants';
 
+// Manages favor CRUD. Same client-side filtering strategy as BorrowService.
 @Injectable({
   providedIn: 'root',
 })
@@ -15,6 +16,7 @@ export class FavorService {
 
   constructor(private readonly http: HttpClient) {}
 
+  // Fetches all favors, filters to the current user, optionally narrowed to one counterpart.
   getFavors(otherUserId?: string): Observable<Favor[]> {
     return this.getCurrentUserId$().pipe(
       switchMap((currentUserId) =>
@@ -63,6 +65,7 @@ export class FavorService {
     return this.http.delete<void>(`${this.apiUrl}/${favorId}`);
   }
 
+  // Marks a favor as settled by flipping isSettled to true.
   settleFavor(favorId: string): Observable<void> {
     return this.http.get<Favor>(`${this.apiUrl}/${favorId}`).pipe(
       switchMap((favor) =>
