@@ -1,115 +1,135 @@
-// These 'using' statements import necessary namespaces to access models, database logic, and Web API tools
+// We need these three lines to get access to:
+// - Our Borrow model (the data structure)
+// - The BorrowsRepository (the class that talks to the database)
+// - MVC tools like Ok(), NotFound(), BadRequest() etc.
 using CoffeeAndKudos.Model.Entities;
 using CoffeeAndKudos.Model.Repositories;
 using Microsoft.AspNetCore.Mvc;
 
 namespace CoffeeAndKudos.API.Controllers;
 
-// This attribute tells ASP.NET that this class serves as an API endpoint and enables automatic validation
+// Marks this class as an API Controller - this unlocks features like
+// automatic error handling when someone sends bad data
 [ApiController]
-// This defines the URL path. [controller] automatically maps to "Borrows" (from BorrowsController)
+// Sets the URL for this controller to: /api/Borrows
+// [controller] is a placeholder that automatically becomes "Borrows" (taken from "BorrowsController")
 [Route("api/[controller]")]
 public class BorrowsController : ControllerBase
 {
-    // A property to hold the repository, which contains the logic to talk to the database
+    // This holds our "database helper" - we store it here so every method in this class can use it
     protected BorrowsRepository Repository { get; }
 
-    // Constructor: When the API starts, it "injects" the repository so the controller can use it
+    // This runs once when the app starts up.
+    // ASP.NET automatically hands us a ready-made BorrowsRepository - we just store it for later use
     public BorrowsController(BorrowsRepository repository)
     {
         Repository = repository;
     }
 
-    // GET: api/Borrows/{id} - Used to retrieve a single record by its unique ID
+    // Handles GET requests to: /api/Borrows/some-id-here
+    // Used when you want to fetch ONE specific borrow record
     [HttpGet("{id}")]
     public ActionResult<Borrow> GetBorrow([FromRoute] Guid id)
     {
-        // Asks the repository to find the record in the database
+        // Go to the database and try to find a borrow record with this ID
+        // The "?" after Borrow means the result could be null (if nothing was found)
         Borrow? borrow = Repository.GetBorrowById(id);
         
-        // If no record is found, return a 404 Not Found response
+        // If the database found nothing, tell the client "that record doesn't exist" (HTTP 404)
         if (borrow == null)
         {
             return NotFound();
         }
 
-        // Return the record with a 200 OK status
+        // Record was found - send it back to the client with a success response (HTTP 200)
         return Ok(borrow);
     }
 
-    // GET: api/Borrows - Used to retrieve all borrow records
+    // Handles GET requests to: /api/Borrows
+    // Used when you want to fetch ALL borrow records at once
     [HttpGet]
     public ActionResult<IEnumerable<Borrow>> GetBorrows()
     {
-        // Returns the full list from the repository with a 200 OK status
+        // Grab every borrow record from the database and send them all back (HTTP 200)
+        // Even if the list is empty, that's still a valid response - no null check needed
         return Ok(Repository.GetBorrows());
     }
 
-    // POST: api/Borrows - Used to create a new borrow record
+    // Handles POST requests to: /api/Borrows
+    // Used when you want to CREATE a new borrow record
+    // The new borrow data is sent inside the request body as JSON
     [HttpPost]
     public ActionResult Post([FromBody] Borrow borrow)
     {
-        // Safety check: if the data sent in the request body is empty, return 400 Bad Request
+        // If the client sent us nothing (empty body), reject the request immediately (HTTP 400)
         if (borrow == null)
         {
             return BadRequest("Borrow info not correct");
         }
 
-        // Tries to insert the new record into the database
+        // Try to save the new record to the database
+        // "status" will be true if it worked, false if something went wrong
         bool status = Repository.InsertBorrow(borrow);
         if (status)
         {
-            return Ok(); // Success
+            return Ok(); // Saved successfully (HTTP 200)
         }
 
-        return BadRequest(); // Something went wrong during save
+        return BadRequest(); // Something failed during the save (HTTP 400)
     }
 
-    // PUT: api/Borrows - Used to update an existing record
+    // Handles PUT requests to: /api/Borrows
+    // Used when you want to UPDATE an existing borrow record
+    // The updated data is sent inside the request body as JSON
     [HttpPut]
     public ActionResult UpdateBorrow([FromBody] Borrow borrow)
     {
+        // If the client sent us nothing (empty body), reject the request immediately (HTTP 400)
         if (borrow == null)
         {
             return BadRequest("Borrow info not correct");
         }
 
-        // First, check if the record actually exists before trying to update it
+        // Before updating, double-check the record actually exists in the database
+        // There's no point updating something that isn't there
         Borrow? existingBorrow = Repository.GetBorrowById(borrow.BorrowId);
         if (existingBorrow == null)
         {
             return NotFound($"Borrow with id {borrow.BorrowId} not found");
         }
 
-        // Update the database with the new data
+        // Record exists - go ahead and overwrite it with the new data
         bool status = Repository.UpdateBorrow(borrow);
         if (status)
         {
-            return Ok();
+            return Ok(); // Updated successfully (HTTP 200)
         }
 
-        return BadRequest("Something went wrong");
+        return BadRequest("Something went wrong"); // Update failed for some reason (HTTP 400)
     }
 
-    // DELETE: api/Borrows/{id} - Used to remove a record from the database
+    // Handles DELETE requests to: /api/Borrows/some-id-here
+    // Used when you want to permanently REMOVE a borrow record
     [HttpDelete("{id}")]
     public ActionResult DeleteBorrow([FromRoute] Guid id)
     {
-        // Check if the record exists so we don't try to delete nothing
+        // Before deleting, check the record actually exists
+        // If it's already gone, we should tell the client rather than silently doing nothing
         Borrow? existingBorrow = Repository.GetBorrowById(id);
         if (existingBorrow == null)
         {
             return NotFound($"Borrow with id {id} not found");
         }
 
-        // Execute the deletion
+        // Record exists - go ahead and delete it
         bool status = Repository.DeleteBorrow(id);
         if (status)
         {
-            // 204 No Content is the standard response for a successful deletion
+            // Deleted successfully - HTTP 204 means "it worked, but there's nothing to send back"
+            // This is the standard way to respond to a successful delete
             return NoContent();
         }
 
-        return BadRequest($"Unable to delete borrow with id {id}");
+        return BadRequest($"Unable to delete borrow with id {id}"); // Delete failed (HTTP 400)
     }
 }
