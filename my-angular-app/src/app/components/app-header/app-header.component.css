@@ -1,0 +1,50 @@
+.global-header {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  padding: 1rem 2.5rem;
+  background: rgba(255, 250, 243, 0.72);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border-bottom: 1px solid var(--border);
+  box-shadow: 0 2px 12px rgba(81, 53, 27, 0.08);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+.header-date {
+  font-size: 0.95rem;
+  color: var(--muted);
+  letter-spacing: 0.03em;
+  justify-self: start;
+}
+
+.header-brand {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  justify-self: center;
+}
+
+.header-logo {
+  height: 80px;
+  width: 80px;
+  object-fit: contain;
+  border-radius: 12px;
+}
+
+.header-title {
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 1.5rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--ink);
+}
+
+.header-team {
+  font-size: 0.95rem;
+  color: var(--muted);
+  letter-spacing: 0.03em;
+  justify-self: end;
+}
