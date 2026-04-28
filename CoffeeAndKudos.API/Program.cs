@@ -1,10 +1,10 @@
 // We need these two lines to get access to:
-// - Our three repositories (the classes that talk to the database)
-// - OpenApiSchema, which we use to tell Swagger how to display certain data types
+// - Our three repositories 
+// - OpenApiSchema, to tell Swagger how to display certain data types
 using CoffeeAndKudos.Model.Repositories;
 using Microsoft.OpenApi.Models;
 
-// Creates the "builder" - think of this as the setup phase of the app
+// Creates the "builder" - the setup phase of the app
 // Everything we configure here happens BEFORE the app actually starts running
 var builder = WebApplication.CreateBuilder(args);
 
@@ -40,12 +40,11 @@ var app = builder.Build();
 
 // Turns on Swagger so it generates the API documentation behind the scenes
 app.UseSwagger();
-// Turns on the Swagger UI - this is the visual webpage at /swagger where you can
-// see and test all your endpoints in the browser
+// Turns on the Swagger UI 
 app.UseSwaggerUI();
 
 // Enables authorization checks - making sure users have permission to access certain endpoints
-// Even if you haven't set up any authorization rules yet, it's good practice to include this
+// Even without authorization process it is good practice
 app.UseAuthorization();
 
 // Tells the app to look at our controllers and wire up all the routes
