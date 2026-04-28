@@ -9,6 +9,9 @@ public class BaseRepository
 {
     protected string ConnectionString { get; } = string.Empty;
 
+    // Parameterless constructor used by Moq when creating test mocks — skips DB setup.
+    protected BaseRepository() { }
+
     public BaseRepository(IConfiguration configuration)
     {
         // Grab the connection string from appsettings / user secrets / env vars

@@ -8,13 +8,16 @@ namespace CoffeeAndKudos.Model.Repositories;
 // Repository handling all database operations for the users table
 public class UserRepository : BaseRepository
 {
+    // Parameterless constructor used by Moq when creating test mocks.
+    protected UserRepository() { }
+
     // Passes the app configuration up to the base class to initialize the connection string
     public UserRepository(IConfiguration configuration) : base(configuration)
     {
     }
 
     // Fetches a single user by their ID, returns null if not found
-    public User? GetUserById(Guid userId)
+    public virtual User? GetUserById(Guid userId)
     {
         NpgsqlConnection? dbConn = null;
         try
@@ -44,7 +47,7 @@ public class UserRepository : BaseRepository
     }
 
     // Returns all users from the database, newest first
-    public List<User> GetUsers()
+    public virtual List<User> GetUsers()
     {
         NpgsqlConnection? dbConn = null;
         var users = new List<User>();
@@ -74,7 +77,7 @@ public class UserRepository : BaseRepository
     }
 
     // Inserts a new user into the database, returns true if successful
-    public bool InsertUser(User user)
+    public virtual bool InsertUser(User user)
     {
         NpgsqlConnection? dbConn = null;
         try
@@ -107,7 +110,7 @@ values
     }
 
     // Updates all fields of an existing user matched by user_id, returns true if a row was affected
-    public bool UpdateUser(User user)
+    public virtual bool UpdateUser(User user)
     {
         NpgsqlConnection? dbConn = null;
         try
@@ -144,7 +147,7 @@ where user_id = @user_id";
     }
 
     // Deletes a user by ID, returns true if a row was removed
-    public bool DeleteUser(Guid userId)
+    public virtual bool DeleteUser(Guid userId)
     {
         NpgsqlConnection? dbConn = null;
         try

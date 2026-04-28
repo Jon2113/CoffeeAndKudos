@@ -8,13 +8,16 @@ namespace CoffeeAndKudos.Model.Repositories;
 // Repository handling all database operations for the favors table
 public class FavorsRepository : BaseRepository
 {
+    // Parameterless constructor used by Moq when creating test mocks.
+    protected FavorsRepository() { }
+
     // Passes the app configuration up to the base class to initialize the connection string
     public FavorsRepository(IConfiguration configuration) : base(configuration)
     {
     }
 
     // Fetches a single favor by its ID, returns null if not found
-    public Favor? GetFavorById(Guid favorId)
+    public virtual Favor? GetFavorById(Guid favorId)
     {
         NpgsqlConnection? dbConn = null;
         try
@@ -44,7 +47,7 @@ public class FavorsRepository : BaseRepository
     }
 
     // Returns all favors from the database, newest first
-    public List<Favor> GetFavors()
+    public virtual List<Favor> GetFavors()
     {
         NpgsqlConnection? dbConn = null;
         var favors = new List<Favor>();
@@ -74,7 +77,7 @@ public class FavorsRepository : BaseRepository
     }
 
     // Inserts a new favor into the database, returns true if successful
-    public bool InsertFavor(Favor favor)
+    public virtual bool InsertFavor(Favor favor)
     {
         NpgsqlConnection? dbConn = null;
         try
@@ -105,7 +108,7 @@ values
     }
 
     // Updates all fields of an existing favor matched by favor_id, returns true if a row was affected
-    public bool UpdateFavor(Favor favor)
+    public virtual bool UpdateFavor(Favor favor)
     {
         NpgsqlConnection? dbConn = null;
         try
@@ -140,7 +143,7 @@ where favor_id = @favor_id";
     }
 
     // Deletes a favor by ID, returns true if a row was removed
-    public bool DeleteFavor(Guid favorId)
+    public virtual bool DeleteFavor(Guid favorId)
     {
         NpgsqlConnection? dbConn = null;
         try

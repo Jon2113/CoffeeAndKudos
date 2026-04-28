@@ -9,12 +9,15 @@ namespace CoffeeAndKudos.Model.Repositories;
 // Follows the same pattern as the other repositories — build the command, pass it to the base, done.
 public class BorrowsRepository : BaseRepository
 {
+    // Parameterless constructor used by Moq when creating test mocks.
+    protected BorrowsRepository() { }
+
     public BorrowsRepository(IConfiguration configuration) : base(configuration)
     {
     }
 
     // Fetch a single borrow by its ID — returns null if nothing matches
-    public Borrow? GetBorrowById(Guid borrowId)
+    public virtual Borrow? GetBorrowById(Guid borrowId)
     {
         NpgsqlConnection? dbConn = null;
         try
@@ -41,7 +44,7 @@ public class BorrowsRepository : BaseRepository
     }
 
     // Pull all borrows, newest first
-    public List<Borrow> GetBorrows()
+    public virtual List<Borrow> GetBorrows()
     {
         NpgsqlConnection? dbConn = null;
         var borrows = new List<Borrow>();
@@ -66,7 +69,7 @@ public class BorrowsRepository : BaseRepository
         }
     }
 
-    public bool InsertBorrow(Borrow borrow)
+    public virtual bool InsertBorrow(Borrow borrow)
     {
         NpgsqlConnection? dbConn = null;
         try
@@ -98,7 +101,7 @@ values
         }
     }
 
-    public bool UpdateBorrow(Borrow borrow)
+    public virtual bool UpdateBorrow(Borrow borrow)
     {
         NpgsqlConnection? dbConn = null;
         try
@@ -136,7 +139,7 @@ where borrow_id = @borrow_id";
     }
 
     // Takes just the ID — no need to fetch the full object just to delete it
-    public bool DeleteBorrow(Guid borrowId)
+    public virtual bool DeleteBorrow(Guid borrowId)
     {
         NpgsqlConnection? dbConn = null;
         try
