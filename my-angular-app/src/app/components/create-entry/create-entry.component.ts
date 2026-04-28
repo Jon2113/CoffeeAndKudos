@@ -1,4 +1,6 @@
+import { NgFor, NgIf } from '@angular/common';
 import { Component, EventEmitter, Input, OnChanges, Output, SimpleChanges } from '@angular/core';
+import { FormsModule } from '@angular/forms';
 import { forkJoin } from 'rxjs';
 
 import { CreateBorrowRequest } from '../../models/borrow.model';
@@ -12,7 +14,8 @@ import { FavorService } from '../../services/favor.service';
 // Supports multi-user selection: one entry is created per selected user.
 @Component({
   selector: 'app-create-entry',
-  standalone: false,
+  standalone: true,
+  imports: [NgIf, NgFor, FormsModule],
   templateUrl: './create-entry.component.html',
   styleUrls: ['./create-entry.component.css'],
 })

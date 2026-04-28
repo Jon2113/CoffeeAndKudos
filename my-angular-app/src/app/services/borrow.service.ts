@@ -17,6 +17,12 @@ export class BorrowService {
 
   constructor(private readonly http: HttpClient) {}
 
+  // Returns every borrow in the system without user filtering — used by the login page
+  // to compute per-user counters before a session has been established.
+  getAllBorrows(): Observable<Borrow[]> {
+    return this.http.get<Borrow[]>(this.apiUrl);
+  }
+
   // Fetches all borrows, then filters to those involving the current user.
   // Pass otherUserId to further restrict to a specific pair (1-on-1 view).
   getBorrows(otherUserId?: string): Observable<Borrow[]> {

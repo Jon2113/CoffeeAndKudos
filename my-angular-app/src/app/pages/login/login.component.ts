@@ -1,20 +1,36 @@
+import { NgFor, NgIf, UpperCasePipe } from '@angular/common';
 import { ChangeDetectorRef, Component, OnDestroy, OnInit } from '@angular/core';
+import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
-import { timeout } from 'rxjs';
+import { forkJoin, timeout } from 'rxjs';
 
+import { Borrow } from '../../models/borrow.model';
+import { Favor } from '../../models/favor.model';
 import { User } from '../../models/user.model';
+import { BorrowService } from '../../services/borrow.service';
+import { FavorService } from '../../services/favor.service';
 import { UserService } from '../../services/user.service';
+
+// Computed active-only metrics for a single user, shown on their profile card.
+interface UserCardMetrics {
+  countLent: number;
+  favorsGiven: number;
+}
 
 // Login page: lists all users and lets the visitor pick an identity.
 // Also handles user creation, inline editing, and deletion.
 @Component({
   selector: 'app-login',
-  standalone: false,
+  standalone: true,
+  imports: [NgIf, NgFor, FormsModule, UpperCasePipe],
   templateUrl: './login.component.html',
   styleUrls: ['./login.component.css'],
 })
 export class LoginComponent implements OnInit, OnDestroy {
   users: User[] = [];
+  // Keyed by userId; computed from live borrows/favors so values stay accurate.
+  userMetrics = new Map<string, UserCardMetrics>();
+
   isLoading = true;
   isCreatePanelOpen = false;
   isCreatingUser = false;
@@ -34,6 +50,8 @@ export class LoginComponent implements OnInit, OnDestroy {
 
   constructor(
     private readonly userService: UserService,
+    private readonly borrowService: BorrowService,
+    private readonly favorService: FavorService,
     private readonly router: Router,
     private readonly cdr: ChangeDetectorRef,
   ) {}
@@ -58,6 +76,11 @@ export class LoginComponent implements OnInit, OnDestroy {
 
   trackByUserId(_index: number, user: User): string {
     return user.userId;
+  }
+
+  // Returns live-computed metrics for a user card, falling back to zeros if not yet loaded.
+  getMetrics(userId: string): UserCardMetrics {
+    return this.userMetrics.get(userId) ?? { countLent: 0, favorsGiven: 0 };
   }
 
   get canCreateUser(): boolean {
@@ -177,9 +200,7 @@ export class LoginComponent implements OnInit, OnDestroy {
       return;
     }
 
-    const isConfirmed = window.confirm(
-      `Remove "${user.username}"? This cannot be undone.`,
-    );
+    const isConfirmed = window.confirm(`Remove "${user.username}"? This cannot be undone.`);
 
     if (!isConfirmed) {
       return;
@@ -219,6 +240,7 @@ export class LoginComponent implements OnInit, OnDestroy {
       this.isLoading = true;
     }
 
+    // Hard timeout as a last-resort guard in case the RxJS timeout fires too late.
     this.hardTimeoutHandle = setTimeout(() => {
       if (this.isLoading) {
         this.errorMessage =
@@ -228,29 +250,59 @@ export class LoginComponent implements OnInit, OnDestroy {
       }
     }, 12000);
 
-    this.userService.getUsers().pipe(timeout(10000)).subscribe({
-      next: (users) => {
-        this.clearHardTimeout();
-        this.users = users;
-        this.isLoading = false;
-        this.cdr.detectChanges();
-      },
-      error: (error: unknown) => {
-        this.clearHardTimeout();
-        const maybeHttpError = error as { status?: number; name?: string };
-        if (maybeHttpError?.name === 'TimeoutError') {
-          this.errorMessage =
-            'Request timed out — please check API, proxy, and database connectivity.';
-        } else if (maybeHttpError?.status) {
-          this.errorMessage = `Could not load profiles (HTTP ${maybeHttpError.status}).`;
-        } else {
-          this.errorMessage =
-            'Could not load profiles. Please check that the API is running.';
-        }
-        this.isLoading = false;
-        this.cdr.detectChanges();
-      },
-    });
+    // Load users, borrows, and favors in parallel so we can compute accurate per-user metrics.
+    forkJoin({
+      users: this.userService.getUsers(),
+      borrows: this.borrowService.getAllBorrows(),
+      favors: this.favorService.getAllFavors(),
+    })
+      .pipe(timeout(10000))
+      .subscribe({
+        next: ({ users, borrows, favors }) => {
+          this.clearHardTimeout();
+          this.users = users;
+          this.userMetrics = this.buildUserMetrics(users, borrows, favors);
+          this.isLoading = false;
+          this.cdr.detectChanges();
+        },
+        error: (error: unknown) => {
+          this.clearHardTimeout();
+          const maybeHttpError = error as { status?: number; name?: string };
+          if (maybeHttpError?.name === 'TimeoutError') {
+            this.errorMessage = 'Request timed out — please check API, proxy, and database connectivity.';
+          } else if (maybeHttpError?.status) {
+            this.errorMessage = `Could not load profiles (HTTP ${maybeHttpError.status}).`;
+          } else {
+            this.errorMessage = 'Could not load profiles. Please check that the API is running.';
+          }
+          this.isLoading = false;
+          this.cdr.detectChanges();
+        },
+      });
+  }
+
+  // Computes active borrow/favor counts per user from live data so the login page
+  // never shows stale DB-stored counter values.
+  private buildUserMetrics(
+    users: User[],
+    borrows: Borrow[],
+    favors: Favor[],
+  ): Map<string, UserCardMetrics> {
+    const metrics = new Map<string, UserCardMetrics>();
+
+    for (const user of users) {
+      const countLent = borrows.filter(
+        (b) => !b.returnedAt && b.lenderId === user.userId,
+      ).length;
+
+      const favorsGiven = favors.filter(
+        (f) => !f.isSettled && f.creditorId === user.userId,
+      ).length;
+
+      metrics.set(user.userId, { countLent, favorsGiven });
+    }
+
+    return metrics;
   }
 
   private clearHardTimeout(): void {

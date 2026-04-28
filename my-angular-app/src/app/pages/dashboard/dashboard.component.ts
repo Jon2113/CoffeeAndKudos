@@ -1,7 +1,12 @@
+import { NgFor, NgIf } from '@angular/common';
 import { ChangeDetectorRef, Component, OnDestroy, OnInit } from '@angular/core';
+import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { forkJoin, timeout } from 'rxjs';
 
+import { ActivityLogComponent } from '../../components/activity-log/activity-log.component';
+import { CreateEntryComponent } from '../../components/create-entry/create-entry.component';
+import { ScaleComponent } from '../../components/scale/scale.component';
 import { Borrow } from '../../models/borrow.model';
 import { ActivityEntry, EntryDirection, ScaleFilterKey, ScaleStats } from '../../models/dashboard.model';
 import { Favor } from '../../models/favor.model';
@@ -14,7 +19,8 @@ import { UserService } from '../../services/user.service';
 // and coordinates the scale card, activity log, and create-entry composer components.
 @Component({
   selector: 'app-dashboard',
-  standalone: false,
+  standalone: true,
+  imports: [NgIf, NgFor, FormsModule, ScaleComponent, ActivityLogComponent, CreateEntryComponent],
   templateUrl: './dashboard.component.html',
   styleUrls: ['./dashboard.component.css'],
 })

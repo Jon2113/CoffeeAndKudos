@@ -16,6 +16,12 @@ export class FavorService {
 
   constructor(private readonly http: HttpClient) {}
 
+  // Returns every favor in the system without user filtering — used by the login page
+  // to compute per-user counters before a session has been established.
+  getAllFavors(): Observable<Favor[]> {
+    return this.http.get<Favor[]>(this.apiUrl);
+  }
+
   // Fetches all favors, filters to the current user, optionally narrowed to one counterpart.
   getFavors(otherUserId?: string): Observable<Favor[]> {
     return this.getCurrentUserId$().pipe(

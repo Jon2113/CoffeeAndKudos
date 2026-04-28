@@ -1,4 +1,6 @@
+import { DatePipe, NgFor, NgIf, UpperCasePipe } from '@angular/common';
 import { Component, EventEmitter, Input, OnChanges, Output, SimpleChanges } from '@angular/core';
+import { FormsModule } from '@angular/forms';
 
 import { ActivityEntry, ScaleFilterKey } from '../../models/dashboard.model';
 import { BorrowService } from '../../services/borrow.service';
@@ -14,7 +16,8 @@ type ActivityDateSort = 'newest' | 'oldest' | 'dueSoon';
 // and scale-card filter integration from the parent dashboard.
 @Component({
   selector: 'app-activity-log',
-  standalone: false,
+  standalone: true,
+  imports: [NgIf, NgFor, FormsModule, UpperCasePipe, DatePipe],
   templateUrl: './activity-log.component.html',
   styleUrls: ['./activity-log.component.css'],
 })

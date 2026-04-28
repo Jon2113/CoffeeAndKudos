@@ -31,8 +31,8 @@
         </div>
 
         <div class="user-metrics">
-          <span>{{ user.countLent }} lent</span>
-          <span>{{ user.favorsGiven }} favors given</span>
+          <span>{{ getMetrics(user.userId).countLent }} lent</span>
+          <span>{{ getMetrics(user.userId).favorsGiven }} favors given</span>
         </div>
         <!-- Stop propagation so Edit/Delete don't also trigger card navigation -->
         <div class="user-actions" (click)="$event.stopPropagation()">

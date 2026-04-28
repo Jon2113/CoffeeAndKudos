@@ -1,3 +1,4 @@
+import { NgClass, NgFor } from '@angular/common';
 import { Component, EventEmitter, Input, Output } from '@angular/core';
 
 import { ScaleFilterKey, ScaleStats } from '../../models/dashboard.model';
@@ -14,7 +15,8 @@ interface ScaleCardView {
 // Cards are clickable to toggle activity-log filters in the parent dashboard.
 @Component({
   selector: 'app-scale',
-  standalone: false,
+  standalone: true,
+  imports: [NgFor, NgClass],
   templateUrl: './scale.component.html',
   styleUrls: ['./scale.component.css'],
 })
