@@ -1,4 +1,4 @@
-// We need these three lines to get access to:
+// Get access to:
 // - Our Borrow model (the data structure)
 // - The BorrowsRepository (the class that talks to the database)
 // - MVC tools like Ok(), NotFound(), BadRequest() etc.
