@@ -1,6 +1,7 @@
 import { DatePipe } from '@angular/common';
 import { Component } from '@angular/core';
 
+// Global page header — displays the current date and the app name.
 @Component({
   selector: 'app-header',
   standalone: true,

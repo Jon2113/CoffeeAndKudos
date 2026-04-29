@@ -5,18 +5,17 @@ using NpgsqlTypes;
 
 namespace CoffeeAndKudos.Model.Repositories;
 
-// Handles all DB operations for the borrows table.
-// Follows the same pattern as the other repositories — build the command, pass it to the base, done.
+// Handles all database operations for the borrows table.
 public class BorrowsRepository : BaseRepository
 {
-    // Parameterless constructor used by Moq when creating test mocks.
+    // Parameterless constructor for Moq — allows the repository to be mocked in tests.
     protected BorrowsRepository() { }
 
     public BorrowsRepository(IConfiguration configuration) : base(configuration)
     {
     }
 
-    // Fetch a single borrow by its ID — returns null if nothing matches
+    // Returns the borrow record with the given ID, or null if no matching row exists.
     public virtual Borrow? GetBorrowById(Guid borrowId)
     {
         NpgsqlConnection? dbConn = null;
@@ -28,22 +27,19 @@ public class BorrowsRepository : BaseRepository
             cmd.Parameters.Add("@borrow_id", NpgsqlDbType.Uuid).Value = borrowId;
 
             var data = GetData(dbConn, cmd);
-            // Only expecting one row max, so a single Read() is enough
             if (data.Read())
             {
                 return MapBorrow(data);
             }
-
             return null;
         }
         finally
         {
-            // Always close — whether we got data, hit an exception, whatever
             dbConn?.Close();
         }
     }
 
-    // Pull all borrows, newest first
+    // Returns all borrow records ordered by creation date, newest first.
     public virtual List<Borrow> GetBorrows()
     {
         NpgsqlConnection? dbConn = null;
@@ -60,7 +56,6 @@ public class BorrowsRepository : BaseRepository
             {
                 borrows.Add(MapBorrow(data));
             }
-
             return borrows;
         }
         finally
@@ -69,6 +64,7 @@ public class BorrowsRepository : BaseRepository
         }
     }
 
+    // Inserts a new borrow record and returns true on success.
     public virtual bool InsertBorrow(Borrow borrow)
     {
         NpgsqlConnection? dbConn = null;
@@ -82,16 +78,16 @@ insert into public.borrows
 values
 (@borrow_id, @lender_id, @borrower_id, @item_name, @due_date, @returned_at, @created_at)";
 
-            cmd.Parameters.AddWithValue("@borrow_id", NpgsqlDbType.Uuid, borrow.BorrowId);
-            cmd.Parameters.AddWithValue("@lender_id", NpgsqlDbType.Uuid, borrow.LenderId);
-            cmd.Parameters.AddWithValue("@borrower_id", NpgsqlDbType.Uuid, borrow.BorrowerId);
-            cmd.Parameters.AddWithValue("@item_name", NpgsqlDbType.Varchar, borrow.ItemName);
-            // due_date and returned_at are nullable — Npgsql needs DBNull.Value explicitly, not just null
-            cmd.Parameters.Add("@due_date", NpgsqlDbType.Date).Value =
+            cmd.Parameters.AddWithValue("@borrow_id",   NpgsqlDbType.Uuid,        borrow.BorrowId);
+            cmd.Parameters.AddWithValue("@lender_id",   NpgsqlDbType.Uuid,        borrow.LenderId);
+            cmd.Parameters.AddWithValue("@borrower_id", NpgsqlDbType.Uuid,        borrow.BorrowerId);
+            cmd.Parameters.AddWithValue("@item_name",   NpgsqlDbType.Varchar,     borrow.ItemName);
+            // Nullable columns require DBNull.Value — Npgsql does not accept a null reference here.
+            cmd.Parameters.Add("@due_date",    NpgsqlDbType.Date).Value =
                 borrow.DueDate.HasValue ? borrow.DueDate.Value : DBNull.Value;
             cmd.Parameters.Add("@returned_at", NpgsqlDbType.TimestampTz).Value =
                 borrow.ReturnedAt.HasValue ? borrow.ReturnedAt.Value : DBNull.Value;
-            cmd.Parameters.AddWithValue("@created_at", NpgsqlDbType.TimestampTz, borrow.CreatedAt);
+            cmd.Parameters.AddWithValue("@created_at",  NpgsqlDbType.TimestampTz, borrow.CreatedAt);
 
             return InsertData(dbConn, cmd);
         }
@@ -101,6 +97,7 @@ values
         }
     }
 
+    // Updates all mutable fields of an existing borrow record and returns true on success.
     public virtual bool UpdateBorrow(Borrow borrow)
     {
         NpgsqlConnection? dbConn = null;
@@ -108,7 +105,6 @@ values
         {
             dbConn = new NpgsqlConnection(ConnectionString);
             var cmd = dbConn.CreateCommand();
-            // Update everything except the ID — that's our key for finding the row
             cmd.CommandText = @"
 update public.borrows set
 lender_id = @lender_id,
@@ -119,16 +115,15 @@ returned_at = @returned_at,
 created_at = @created_at
 where borrow_id = @borrow_id";
 
-            cmd.Parameters.AddWithValue("@lender_id", NpgsqlDbType.Uuid, borrow.LenderId);
-            cmd.Parameters.AddWithValue("@borrower_id", NpgsqlDbType.Uuid, borrow.BorrowerId);
-            cmd.Parameters.AddWithValue("@item_name", NpgsqlDbType.Varchar, borrow.ItemName);
-            // Same nullable handling as in Insert
-            cmd.Parameters.Add("@due_date", NpgsqlDbType.Date).Value =
+            cmd.Parameters.AddWithValue("@lender_id",   NpgsqlDbType.Uuid,    borrow.LenderId);
+            cmd.Parameters.AddWithValue("@borrower_id", NpgsqlDbType.Uuid,    borrow.BorrowerId);
+            cmd.Parameters.AddWithValue("@item_name",   NpgsqlDbType.Varchar, borrow.ItemName);
+            cmd.Parameters.Add("@due_date",    NpgsqlDbType.Date).Value =
                 borrow.DueDate.HasValue ? borrow.DueDate.Value : DBNull.Value;
             cmd.Parameters.Add("@returned_at", NpgsqlDbType.TimestampTz).Value =
                 borrow.ReturnedAt.HasValue ? borrow.ReturnedAt.Value : DBNull.Value;
-            cmd.Parameters.AddWithValue("@created_at", NpgsqlDbType.TimestampTz, borrow.CreatedAt);
-            cmd.Parameters.AddWithValue("@borrow_id", NpgsqlDbType.Uuid, borrow.BorrowId);
+            cmd.Parameters.AddWithValue("@created_at",  NpgsqlDbType.TimestampTz, borrow.CreatedAt);
+            cmd.Parameters.AddWithValue("@borrow_id",   NpgsqlDbType.Uuid,        borrow.BorrowId);
 
             return UpdateData(dbConn, cmd);
         }
@@ -138,7 +133,7 @@ where borrow_id = @borrow_id";
         }
     }
 
-    // Takes just the ID — no need to fetch the full object just to delete it
+    // Deletes the borrow record with the given ID and returns true on success.
     public virtual bool DeleteBorrow(Guid borrowId)
     {
         NpgsqlConnection? dbConn = null;
@@ -157,18 +152,18 @@ where borrow_id = @borrow_id";
         }
     }
 
-    // Converts a raw DB row into a Borrow object.
-    // The nullable columns need an explicit DBNull check — casting DBNull directly would throw.
+    // Maps a single data reader row to a Borrow entity.
+    // Nullable columns are checked against DBNull before casting to avoid runtime exceptions.
     private static Borrow MapBorrow(NpgsqlDataReader data)
     {
         return new Borrow((Guid)data["borrow_id"])
         {
-            LenderId = (Guid)data["lender_id"],
+            LenderId   = (Guid)data["lender_id"],
             BorrowerId = (Guid)data["borrower_id"],
-            ItemName = data["item_name"].ToString() ?? string.Empty,
-            DueDate = data["due_date"] == DBNull.Value ? null : (DateOnly)data["due_date"],
-            ReturnedAt = data["returned_at"] == DBNull.Value ? null : (DateTime?)data["returned_at"],
-            CreatedAt = (DateTime)data["created_at"]
+            ItemName   = data["item_name"].ToString() ?? string.Empty,
+            DueDate    = data["due_date"]     == DBNull.Value ? null : (DateOnly)data["due_date"],
+            ReturnedAt = data["returned_at"]  == DBNull.Value ? null : (DateTime?)data["returned_at"],
+            CreatedAt  = (DateTime)data["created_at"]
         };
     }
 }

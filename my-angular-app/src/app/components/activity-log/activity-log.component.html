@@ -21,6 +21,7 @@
     </div>
   </div>
 
+  <!-- Collapsible local filter panel: type, direction, status, date range, sort order -->
   <section *ngIf="isFilterPanelOpen" class="filter-panel">
     <label class="field-stack">
       <span>Activity</span>
@@ -81,6 +82,7 @@
     </div>
   </section>
 
+  <!-- Banner shown when a scale card filter is active — lets the user clear it from here -->
   <section *ngIf="hasScaleFilters" class="scale-filter-banner">
     <div>
       <p class="eyebrow">Active Filter</p>
@@ -95,6 +97,7 @@
 
   <p *ngIf="actionError" class="status-banner error">{{ actionError }}</p>
 
+  <!-- Timeline list — each article is one borrow or favor entry -->
   <div *ngIf="filteredEntries.length > 0; else emptyState" class="log-list">
     <article
       *ngFor="let entry of filteredEntries; trackBy: trackByEntryId"
@@ -120,6 +123,7 @@
           <span *ngIf="entry.dueDate">Due: {{ entry.dueDate | date: 'MMM d, y' }}</span>
         </div>
 
+        <!-- Inline edit form — visible only when edit mode is active and this entry is selected -->
         <section *ngIf="isEditing(entry.id)" class="edit-panel">
           <label class="field-stack">
             <span>{{ entry.type === 'borrow' ? 'Item title' : 'Description' }}</span>
@@ -154,6 +158,7 @@
         </section>
       </div>
 
+      <!-- Per-entry action buttons: complete, edit, delete (edit/delete only in edit mode) -->
       <div class="entry-actions">
         <button
           type="button"
@@ -180,6 +185,7 @@
           Edit
         </button>
 
+        <!-- Delete button with two-step confirmation to prevent accidental removal -->
         <ng-container *ngIf="isEditMode && pendingDeleteId !== entry.id">
           <button
             type="button"
@@ -220,6 +226,7 @@
     </article>
   </div>
 
+  <!-- Shown when no entries match the active filters -->
   <ng-template #emptyState>
     <section class="empty-panel">
       <p class="eyebrow">Nothing here</p>

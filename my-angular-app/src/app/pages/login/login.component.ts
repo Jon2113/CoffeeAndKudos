@@ -33,7 +33,7 @@ export class LoginComponent implements OnInit, OnDestroy {
   users: User[] = [];
   userMetrics = new Map<string, UserCardMetrics>();
 
-  // Reactive form for creating a new profile (covers L08 reactive forms requirement).
+  // Reactive form for creating a new user profile.
   readonly createForm = new FormGroup({
     username: new FormControl('', [Validators.required]),
     email: new FormControl('', [Validators.required, Validators.email]),

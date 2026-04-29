@@ -3,18 +3,17 @@ using Npgsql;
 using Microsoft.Extensions.Configuration;
 using System;
 
-// Every repository inherits from this. It handles the DB connection setup
-// so we don't repeat that logic everywhere.
+// Base class for all repositories. Handles connection string setup and provides
+// shared query execution methods used by every repository.
 public class BaseRepository
 {
     protected string ConnectionString { get; } = string.Empty;
 
-    // Parameterless constructor used by Moq when creating test mocks — skips DB setup.
+    // Parameterless constructor for Moq — skips DB setup so repositories can be mocked in tests.
     protected BaseRepository() { }
 
     public BaseRepository(IConfiguration configuration)
     {
-        // Grab the connection string from appsettings / user secrets / env vars
         string rawConnectionString = configuration.GetConnectionString("AppProgDb") ?? string.Empty;
         if (string.IsNullOrWhiteSpace(rawConnectionString))
         {
@@ -22,18 +21,17 @@ public class BaseRepository
                 "Missing connection string 'ConnectionStrings:AppProgDb'.");
         }
 
-        // Parse it so we can inspect (and potentially inject) individual fields
         var builder = new NpgsqlConnectionStringBuilder(rawConnectionString);
 
-        // The password probably isn't in the connection string itself — that would
-        // mean committing it to source control, which we obviously don't want.
-        // So if it's missing, we try a few fallback locations in order of preference.
+        // The password is intentionally absent from the connection string in appsettings
+        // to avoid committing credentials to source control.
+        // It is resolved from the first available source in order of preference.
         if (string.IsNullOrWhiteSpace(builder.Password))
         {
             string? password =
-                configuration["ConnectionStrings:AppProgDbPassword"] ?? // user secrets
-                configuration["SUPABASE_DB_PASSWORD"] ??               // Supabase hosted env
-                configuration["DB_PASSWORD"];                           // generic fallback
+                configuration["ConnectionStrings:AppProgDbPassword"] ?? // .NET User Secrets
+                configuration["SUPABASE_DB_PASSWORD"] ??               // Supabase-hosted deployments
+                configuration["DB_PASSWORD"];                           // generic environment variable
 
             if (!string.IsNullOrWhiteSpace(password))
             {
@@ -41,28 +39,24 @@ public class BaseRepository
             }
         }
 
-        // If we still don't have a password after all that, something is misconfigured —
-        // better to blow up here with a clear message than get a cryptic Postgres error later.
         if (string.IsNullOrWhiteSpace(builder.Password))
         {
             throw new InvalidOperationException(
                 "Database password missing. Configure 'ConnectionStrings:AppProgDbPassword' via User Secrets or environment variable.");
         }
 
-        // Rebuild the final connection string with the password baked in
         ConnectionString = builder.ConnectionString;
     }
 
-    // Opens the connection and returns a reader — caller is responsible for disposing both
+    // Opens the connection and executes the command as a query. The caller is responsible for closing the connection.
     protected NpgsqlDataReader GetData(NpgsqlConnection conn, NpgsqlCommand cmd)
     {
         conn.Open();
         return cmd.ExecuteReader();
     }
 
-    // These three are basically the same pattern: open, execute, done.
-    // They always return true — the idea is just to give callers a consistent
-    // bool they can check if they want, even though right now we don't surface failures here.
+    // Opens the connection and executes a non-query command. Returns true unconditionally;
+    // row count and error details are not surfaced at this level.
     protected bool InsertData(NpgsqlConnection conn, NpgsqlCommand cmd)
     {
         conn.Open();

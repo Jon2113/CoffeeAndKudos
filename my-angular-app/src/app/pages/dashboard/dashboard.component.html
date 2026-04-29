@@ -1,4 +1,6 @@
 <div class="page-shell dashboard-shell">
+
+  <!-- Hero section: page title, 1-on-1 user filter, and profile switch -->
   <section class="hero-panel">
     <div class="hero-copy">
       <p class="eyebrow">Dashboard</p>
@@ -29,6 +31,7 @@
 
   <p *ngIf="errorMessage" class="status-banner error">{{ errorMessage }}</p>
 
+  <!-- Loading state shown while the initial forkJoin request is in flight -->
   <section *ngIf="isLoading" class="loading-card">
     <div class="spinner"></div>
     <div>
@@ -38,6 +41,8 @@
   </section>
 
   <ng-container *ngIf="!isLoading && !errorMessage">
+
+    <!-- Four stat cards; clicking a card toggles a filter on the activity log -->
     <app-scale
       [stats]="scaleStats"
       [currentUserName]="currentUser?.username ?? ''"
@@ -46,6 +51,7 @@
       (filterSelected)="onScaleFilterSelected($event)"
     ></app-scale>
 
+    <!-- Combined borrow/favor timeline with local filters and edit mode -->
     <app-activity-log
       [entries]="activityEntries"
       [scaleFilters]="activeScaleFilters"
@@ -53,8 +59,10 @@
       (clearScaleFilter)="clearScaleFilter()"
       (entryUpdated)="refreshDashboard()"
     ></app-activity-log>
+
   </ng-container>
 
+  <!-- Floating action button — opens the entry composer panel -->
   <button
     type="button"
     class="floating-create-button"
@@ -64,6 +72,7 @@
     +
   </button>
 
+  <!-- Slide-in modal for creating new borrows or favors -->
   <app-create-entry
     [isOpen]="isComposerOpen"
     [users]="otherUsers"
@@ -72,4 +81,5 @@
     (closed)="closeComposer()"
     (saved)="handleEntrySaved()"
   ></app-create-entry>
+
 </div>
