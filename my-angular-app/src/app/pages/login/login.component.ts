@@ -1,6 +1,9 @@
 import { NgFor, NgIf, UpperCasePipe } from '@angular/common';
 import { ChangeDetectorRef, Component, OnDestroy, OnInit } from '@angular/core';
-import { FormsModule } from '@angular/forms';
+import { FormControl, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
+import { MatButtonModule } from '@angular/material/button';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatInputModule } from '@angular/material/input';
 import { Router } from '@angular/router';
 import { forkJoin, timeout } from 'rxjs';
 
@@ -22,25 +25,29 @@ interface UserCardMetrics {
 @Component({
   selector: 'app-login',
   standalone: true,
-  imports: [NgIf, NgFor, FormsModule, UpperCasePipe],
+  imports: [NgIf, NgFor, FormsModule, ReactiveFormsModule, UpperCasePipe, MatFormFieldModule, MatInputModule, MatButtonModule],
   templateUrl: './login.component.html',
   styleUrls: ['./login.component.css'],
 })
 export class LoginComponent implements OnInit, OnDestroy {
   users: User[] = [];
-  // Keyed by userId; computed from live borrows/favors so values stay accurate.
   userMetrics = new Map<string, UserCardMetrics>();
+
+  // Reactive form for creating a new profile (covers L08 reactive forms requirement).
+  readonly createForm = new FormGroup({
+    username: new FormControl('', [Validators.required]),
+    email: new FormControl('', [Validators.required, Validators.email]),
+  });
 
   isLoading = true;
   isCreatePanelOpen = false;
   isCreatingUser = false;
   isSavingUserChanges = false;
   busyDeleteUserId = '';
+  pendingDeleteUserId = '';
   editingUserId = '';
   editUsername = '';
   editEmail = '';
-  newUsername = '';
-  newEmail = '';
   createInfoMessage = '';
   createErrorMessage = '';
   manageInfoMessage = '';
@@ -84,11 +91,7 @@ export class LoginComponent implements OnInit, OnDestroy {
   }
 
   get canCreateUser(): boolean {
-    return (
-      !this.isCreatingUser &&
-      Boolean(this.newUsername.trim()) &&
-      Boolean(this.newEmail.trim())
-    );
+    return !this.isCreatingUser && this.createForm.valid;
   }
 
   get canSaveUserEdit(): boolean {
@@ -106,6 +109,9 @@ export class LoginComponent implements OnInit, OnDestroy {
     this.createInfoMessage = '';
     this.manageErrorMessage = '';
     this.manageInfoMessage = '';
+    if (!this.isCreatePanelOpen) {
+      this.createForm.reset();
+    }
   }
 
   createUser(): void {
@@ -117,16 +123,14 @@ export class LoginComponent implements OnInit, OnDestroy {
     this.createErrorMessage = '';
     this.createInfoMessage = '';
 
+    const { username, email } = this.createForm.value;
+
     this.userService
-      .createUser({
-        username: this.newUsername,
-        email: this.newEmail,
-      })
+      .createUser({ username: username ?? '', email: email ?? '' })
       .subscribe({
         next: () => {
           this.isCreatingUser = false;
-          this.newUsername = '';
-          this.newEmail = '';
+          this.createForm.reset();
           this.createInfoMessage = 'Profile created — select it below to open your dashboard.';
           this.manageErrorMessage = '';
           this.manageInfoMessage = '';
@@ -199,14 +203,18 @@ export class LoginComponent implements OnInit, OnDestroy {
     if (this.isSavingUserChanges || this.busyDeleteUserId) {
       return;
     }
+    this.pendingDeleteUserId = user.userId;
+    this.manageErrorMessage = '';
+    this.manageInfoMessage = '';
+  }
 
-    const isConfirmed = window.confirm(`Remove "${user.username}"? This cannot be undone.`);
-
-    if (!isConfirmed) {
+  confirmDeleteUser(user: User): void {
+    if (this.isSavingUserChanges || this.busyDeleteUserId) {
       return;
     }
 
     this.busyDeleteUserId = user.userId;
+    this.pendingDeleteUserId = '';
     this.manageErrorMessage = '';
     this.manageInfoMessage = '';
 
@@ -227,6 +235,10 @@ export class LoginComponent implements OnInit, OnDestroy {
         this.cdr.detectChanges();
       },
     });
+  }
+
+  cancelDeleteUser(): void {
+    this.pendingDeleteUserId = '';
   }
 
   isEditingUser(userId: string): boolean {

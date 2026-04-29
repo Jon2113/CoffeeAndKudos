@@ -195,6 +195,14 @@
   }
 }
 
+.delete-confirm-label {
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: #991b1b;
+  align-self: center;
+  white-space: nowrap;
+}
+
 @media (max-width: 640px) {
   .log-header {
     flex-direction: column;

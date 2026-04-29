@@ -39,6 +39,7 @@ export class ActivityLogComponent implements OnChanges {
 
   busyEntryId = '';
   busyAction: 'complete' | 'delete' | '' = '';
+  pendingDeleteId = '';
   actionError = '';
   editError = '';
   editingEntryId = '';
@@ -160,13 +161,16 @@ export class ActivityLogComponent implements OnChanges {
     if (this.busyEntryId || this.isSavingEdit) {
       return;
     }
+    this.pendingDeleteId = entry.id;
+    this.actionError = '';
+  }
 
-    const isConfirmed = window.confirm(`Delete "${entry.title}"? This cannot be undone.`);
-
-    if (!isConfirmed) {
+  confirmDelete(entry: ActivityEntry): void {
+    if (this.busyEntryId || this.isSavingEdit) {
       return;
     }
 
+    this.pendingDeleteId = '';
     this.actionError = '';
     this.busyEntryId = entry.id;
     this.busyAction = 'delete';
@@ -188,6 +192,10 @@ export class ActivityLogComponent implements OnChanges {
         this.busyAction = '';
       },
     });
+  }
+
+  cancelDelete(): void {
+    this.pendingDeleteId = '';
   }
 
   toggleFilterPanel(): void {

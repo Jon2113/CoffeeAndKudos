@@ -39,19 +39,28 @@
           <button
             type="button"
             class="ghost-button compact-button"
-            [disabled]="isSavingUserChanges || busyDeleteUserId === user.userId"
+            [disabled]="isSavingUserChanges || !!busyDeleteUserId"
             (click)="startUserEdit(user)"
           >
             Edit
           </button>
-          <button
-            type="button"
-            class="danger-button compact-button"
-            [disabled]="isSavingUserChanges || busyDeleteUserId === user.userId"
-            (click)="deleteUser(user)"
-          >
-            {{ busyDeleteUserId === user.userId ? 'Deleting…' : 'Delete' }}
-          </button>
+
+          <ng-container *ngIf="pendingDeleteUserId !== user.userId">
+            <button
+              type="button"
+              class="danger-button compact-button"
+              [disabled]="isSavingUserChanges || busyDeleteUserId === user.userId"
+              (click)="deleteUser(user)"
+            >
+              {{ busyDeleteUserId === user.userId ? 'Deleting…' : 'Delete' }}
+            </button>
+          </ng-container>
+
+          <ng-container *ngIf="pendingDeleteUserId === user.userId">
+            <span class="delete-confirm-label">Remove "{{ user.username }}"?</span>
+            <button type="button" class="danger-button compact-button" (click)="confirmDeleteUser(user)">Yes, remove</button>
+            <button type="button" class="ghost-button compact-button" (click)="cancelDeleteUser()">Cancel</button>
+          </ng-container>
         </div>
 
         <!-- Inline edit form — also blocked from triggering card navigation -->
@@ -110,34 +119,27 @@
         </button>
       </div>
 
-      <div *ngIf="isCreatePanelOpen" class="create-user-form">
-        <label class="field-stack">
-          <span>Username</span>
-          <input
-            type="text"
-            [(ngModel)]="newUsername"
-            name="newUsername"
-            placeholder="e.g. Diba"
-          >
-        </label>
+      <form *ngIf="isCreatePanelOpen" [formGroup]="createForm" class="create-user-form" (ngSubmit)="createUser()">
+        <mat-form-field appearance="outline" class="mat-full-width">
+          <mat-label>Username</mat-label>
+          <input matInput formControlName="username" placeholder="e.g. Diba">
+          <mat-error *ngIf="createForm.get('username')?.hasError('required')">Username is required</mat-error>
+        </mat-form-field>
 
-        <label class="field-stack">
-          <span>Email</span>
-          <input
-            type="email"
-            [(ngModel)]="newEmail"
-            name="newEmail"
-            placeholder="name@example.com"
-          >
-        </label>
+        <mat-form-field appearance="outline" class="mat-full-width">
+          <mat-label>Email</mat-label>
+          <input matInput type="email" formControlName="email" placeholder="name@example.com">
+          <mat-error *ngIf="createForm.get('email')?.hasError('required')">Email is required</mat-error>
+          <mat-error *ngIf="createForm.get('email')?.hasError('email')">Enter a valid email address</mat-error>
+        </mat-form-field>
 
         <p *ngIf="createErrorMessage" class="status-banner error">{{ createErrorMessage }}</p>
         <p *ngIf="createInfoMessage" class="status-banner success">{{ createInfoMessage }}</p>
 
-        <button type="button" class="primary-button" [disabled]="!canCreateUser" (click)="createUser()">
+        <button type="submit" class="primary-button" [disabled]="!canCreateUser">
           {{ isCreatingUser ? 'Creating…' : 'Create profile' }}
         </button>
-      </div>
+      </form>
     </section>
 
     <section *ngIf="!isLoading && !errorMessage && users.length === 0" class="empty-panel">

@@ -4,12 +4,19 @@
 using CoffeeAndKudos.Model.Repositories;
 using Microsoft.OpenApi.Models;
 
-// Creates the "builder" - the setup phase of the app
-// Everything we configure here happens BEFORE the app actually starts running
 var builder = WebApplication.CreateBuilder(args);
 
-// Tells the app that we have controllers (like UserController, BorrowsController etc.)
-// Without this line, ASP.NET wouldn't know they exist
+// Named CORS policy — allows the Angular dev server origin to call the API directly.
+// The Angular proxy (proxy.conf.json) handles this in dev, but the policy is needed
+// for any direct API consumer (Swagger UI, tests, production builds).
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowAngularDev", policy =>
+        policy.WithOrigins("http://localhost:4200")
+              .AllowAnyHeader()
+              .AllowAnyMethod());
+});
+
 builder.Services.AddControllers();
 
 // Allows the app to automatically discover and document all our API endpoints
@@ -38,13 +45,11 @@ builder.Services.AddScoped<FavorsRepository>();
 // We're done configuring - this line actually BUILDS the app and gets it ready to run
 var app = builder.Build();
 
-// Turns on Swagger so it generates the API documentation behind the scenes
 app.UseSwagger();
-// Turns on the Swagger UI 
 app.UseSwaggerUI();
 
-// Enables authorization checks - making sure users have permission to access certain endpoints
-// Even without authorization process it is good practice
+app.UseCors("AllowAngularDev");
+
 app.UseAuthorization();
 
 // Tells the app to look at our controllers and wire up all the routes

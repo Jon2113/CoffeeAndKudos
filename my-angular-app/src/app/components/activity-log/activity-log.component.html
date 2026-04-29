@@ -180,15 +180,22 @@
           Edit
         </button>
 
-        <button
-          *ngIf="isEditMode"
-          type="button"
-          class="danger-button compact-button"
-          [disabled]="isSavingEdit || busyEntryId === entry.id"
-          (click)="deleteEntry(entry)"
-        >
-          {{ busyEntryId === entry.id && busyAction === 'delete' ? 'Deleting…' : 'Delete' }}
-        </button>
+        <ng-container *ngIf="isEditMode && pendingDeleteId !== entry.id">
+          <button
+            type="button"
+            class="danger-button compact-button"
+            [disabled]="isSavingEdit || busyEntryId === entry.id"
+            (click)="deleteEntry(entry)"
+          >
+            {{ busyEntryId === entry.id && busyAction === 'delete' ? 'Deleting…' : 'Delete' }}
+          </button>
+        </ng-container>
+
+        <ng-container *ngIf="isEditMode && pendingDeleteId === entry.id">
+          <span class="delete-confirm-label">Delete "{{ entry.title }}"?</span>
+          <button type="button" class="danger-button compact-button" (click)="confirmDelete(entry)">Yes</button>
+          <button type="button" class="ghost-button compact-button" (click)="cancelDelete()">No</button>
+        </ng-container>
 
         <button
           *ngIf="isEditing(entry.id)"

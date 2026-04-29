@@ -5,7 +5,7 @@ import { forkJoin } from 'rxjs';
 
 import { CreateBorrowRequest } from '../../models/borrow.model';
 import { EntryDirection, EntryType } from '../../models/dashboard.model';
-import { CreateFavorRequest } from '../../models/favor.model';
+import { CreateFavorRequest, Favor } from '../../models/favor.model';
 import { User } from '../../models/user.model';
 import { BorrowService } from '../../services/borrow.service';
 import { FavorService } from '../../services/favor.service';
@@ -36,6 +36,12 @@ export class CreateEntryComponent implements OnChanges {
   dueDate = '';
   isSaving = false;
   errorMessage = '';
+
+  // Settle existing favors alongside the new entry.
+  isSettleExpanded = false;
+  settleableFavors: Favor[] = [];
+  settleIds: string[] = [];
+  isLoadingSettleable = false;
 
   constructor(
     private readonly borrowService: BorrowService,
@@ -134,6 +140,40 @@ export class CreateEntryComponent implements OnChanges {
     } else {
       this.selectedUserIds = [...this.selectedUserIds, userId];
     }
+
+    if (this.isSettleExpanded) {
+      this.loadSettleableFavors();
+    }
+  }
+
+  toggleSettleSection(): void {
+    this.isSettleExpanded = !this.isSettleExpanded;
+    if (this.isSettleExpanded) {
+      this.loadSettleableFavors();
+    }
+  }
+
+  toggleSettleId(favorId: string): void {
+    if (this.settleIds.includes(favorId)) {
+      this.settleIds = this.settleIds.filter((id) => id !== favorId);
+    } else {
+      this.settleIds = [...this.settleIds, favorId];
+    }
+  }
+
+  isSettleSelected(favorId: string): boolean {
+    return this.settleIds.includes(favorId);
+  }
+
+  getSettleLabel(favor: Favor): string {
+    const counterpartyId =
+      favor.creditorId === this.currentUserId ? favor.debtorId : favor.creditorId;
+    const counterpartyName =
+      this.users.find((u) => u.userId === counterpartyId)?.username ?? 'Unknown';
+    const youDidIt = favor.creditorId === this.currentUserId;
+    return youDidIt
+      ? `You did: "${favor.description}" (owed by ${counterpartyName})`
+      : `${counterpartyName} did: "${favor.description}" (you owe them)`;
   }
 
   isUserSelected(userId: string): boolean {
@@ -148,12 +188,13 @@ export class CreateEntryComponent implements OnChanges {
     this.isSaving = true;
     this.errorMessage = '';
 
-    // Fire all create requests in parallel; emit saved only when every one succeeds.
-    const requests = this.selectedUserIds.map((otherUserId) =>
+    const createRequests = this.selectedUserIds.map((otherUserId) =>
       this.entryType === 'borrow'
         ? this.borrowService.createBorrow(this.buildBorrowPayload(otherUserId))
         : this.favorService.createFavor(this.buildFavorPayload(otherUserId)),
     );
+    const settleRequests = this.settleIds.map((id) => this.favorService.settleFavor(id));
+    const requests = [...createRequests, ...settleRequests];
 
     forkJoin(requests).subscribe({
       next: () => {
@@ -216,6 +257,33 @@ export class CreateEntryComponent implements OnChanges {
     this.dueDate = '';
     this.isSaving = false;
     this.errorMessage = '';
+    this.isSettleExpanded = false;
+    this.settleableFavors = [];
+    this.settleIds = [];
+    this.isLoadingSettleable = false;
+  }
+
+  private loadSettleableFavors(): void {
+    this.isLoadingSettleable = true;
+    this.settleableFavors = [];
+    this.settleIds = [];
+
+    this.favorService.getFavors().subscribe({
+      next: (favors) => {
+        this.settleableFavors = favors.filter((f) => {
+          if (f.isSettled) {
+            return false;
+          }
+          const counterpartyId =
+            f.creditorId === this.currentUserId ? f.debtorId : f.creditorId;
+          return this.selectedUserIds.includes(counterpartyId);
+        });
+        this.isLoadingSettleable = false;
+      },
+      error: () => {
+        this.isLoadingSettleable = false;
+      },
+    });
   }
 
   private resolveUserName(userId: string): string {
