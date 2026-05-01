@@ -84,39 +84,44 @@
 
     <p class="selection-summary">{{ selectedUsersSummary }}</p>
 
-    <div class="field-grid">
-      <label class="field-stack">
-        <span>Date</span>
-        <input type="date" [(ngModel)]="createdOn" name="createdOn">
-      </label>
+ <div class="date-settle-row">
+  <div class="field-grid">
+    <label class="field-stack">
+      <span>Date</span>
+      <input type="date" [(ngModel)]="createdOn" name="createdOn">
+    </label>
 
-      <label *ngIf="entryType === 'borrow'" class="field-stack">
-        <span>Due date</span>
-        <input type="date" [(ngModel)]="dueDate" name="dueDate">
-      </label>
-    </div>
+    <label *ngIf="entryType === 'borrow'" class="field-stack">
+      <span>Due date</span>
+      <input type="date" [(ngModel)]="dueDate" name="dueDate">
+    </label>
+  </div>
 
-    <!-- Settle existing favors alongside this new entry (only for favor type) -->
-    <div *ngIf="entryType === 'favor' && selectedUserIds.length > 0" class="settle-section">
-      <button type="button" class="ghost-button compact-button settle-toggle" (click)="toggleSettleSection()">
-        {{ isSettleExpanded ? 'Hide' : '+ Also settle existing favors?' }}
-      </button>
+  <button
+    *ngIf="entryType === 'favor' && selectedUserIds.length > 0"
+    type="button"
+    class="ghost-button compact-button settle-toggle"
+    (click)="toggleSettleSection()"
+  >
+    {{ isSettleExpanded ? 'Hide' : '+ Also settle existing favors?' }}
+  </button>
+</div>
 
-      <div *ngIf="isSettleExpanded" class="settle-list">
-        <p *ngIf="isLoadingSettleable" class="settle-hint">Loading…</p>
-        <p *ngIf="!isLoadingSettleable && settleableFavors.length === 0" class="settle-hint">
-          No open favors with the selected people.
-        </p>
-        <label *ngFor="let favor of settleableFavors" class="settle-item">
-          <input
-            type="checkbox"
-            [checked]="isSettleSelected(favor.favorId)"
-            (change)="toggleSettleId(favor.favorId)"
-          >
-          <span>{{ getSettleLabel(favor) }}</span>
-        </label>
-      </div>
-    </div>
+<div *ngIf="entryType === 'favor' && selectedUserIds.length > 0 && isSettleExpanded" class="settle-list">
+  <p *ngIf="isLoadingSettleable" class="settle-hint">Loading…</p>
+  <p *ngIf="!isLoadingSettleable && settleableFavors.length === 0" class="settle-hint">
+    No open favors with the selected people.
+  </p>
+  <label *ngFor="let favor of settleableFavors" class="settle-item">
+    <input
+      type="checkbox"
+      [checked]="isSettleSelected(favor.favorId)"
+      (change)="toggleSettleId(favor.favorId)"
+    >
+    <span>{{ getSettleLabel(favor) }}</span>
+  </label>
+</div>  
+
 
     <p class="composer-summary">{{ summaryText }}</p>
     <p *ngIf="errorMessage" class="status-banner error">{{ errorMessage }}</p>
