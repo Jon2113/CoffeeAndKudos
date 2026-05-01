@@ -1,24 +1,24 @@
--- =====================================================================
+-- 
 -- FULL SETUP SCRIPT: CoffeeAndKudos
 -- Creates schema (tables, constraints, indexes) and seeds data
 -- Idempotent: drops existing tables before recreating
--- =====================================================================
+-- 
 
 -- 0) Extension for gen_random_uuid()
 CREATE EXTENSION IF NOT EXISTS pgcrypto;
 
--- =====================================================================
+-- 
 -- 1) Drop existing objects for testing purposes (MS: dont't delete!)
--- =====================================================================
+-- 
 DROP TABLE IF EXISTS borrows CASCADE;
 DROP TABLE IF EXISTS favors  CASCADE;
 DROP TABLE IF EXISTS users   CASCADE;
 
--- =====================================================================
+-- 
 -- 2) TABLES
--- =====================================================================
+-- 
 
--- ---- users ----------------------------------------------------------
+-- users 
 CREATE TABLE users (
   user_id        uuid        PRIMARY KEY,
   username       varchar     NOT NULL UNIQUE,
@@ -30,7 +30,7 @@ CREATE TABLE users (
   favors_taken   int4        NOT NULL
 );
 
--- ---- borrows --------------------------------------------------------
+-- borrows 
 CREATE TABLE borrows (
   borrow_id   uuid        PRIMARY KEY,
   lender_id   uuid        NOT NULL REFERENCES users(user_id),
@@ -41,7 +41,7 @@ CREATE TABLE borrows (
   created_at  timestamptz NOT NULL
 );
 
--- ---- favors ---------------------------------------------------------
+-- favors 
 CREATE TABLE favors (
   favor_id    uuid        PRIMARY KEY,
   debtor_id   uuid        NOT NULL REFERENCES users(user_id),
@@ -51,18 +51,18 @@ CREATE TABLE favors (
   created_at  timestamptz NOT NULL
 );
 
--- =====================================================================
+-- 
 -- 3) INDEXES (custom, in addition to PK/UNIQUE indexes)
--- =====================================================================
+-- 
 CREATE INDEX idx_borrows_borrower ON public.borrows USING btree (borrower_id);
 CREATE INDEX idx_borrows_lender   ON public.borrows USING btree (lender_id);
 CREATE INDEX idx_favors_creditor  ON public.favors  USING btree (creditor_id);
 CREATE INDEX idx_favors_debtor    ON public.favors  USING btree (debtor_id);
 
--- =====================================================================
+-- 
 -- 4) SEED: USERS
 -- Counters are set consistently via UPDATE at the end
--- =====================================================================
+-- 
 INSERT INTO users (user_id, username, email, created_at, count_lent, count_borrowed, favors_given, favors_taken) VALUES
   (gen_random_uuid(), 'Manuel Neuer',     'manuel.neuer@fcbayern.com',     NOW() - INTERVAL '90 days', 0, 0, 0, 0),
   (gen_random_uuid(), 'Thomas Müller',    'thomas.mueller@fcbayern.com',   NOW() - INTERVAL '90 days', 0, 0, 0, 0),
@@ -75,9 +75,9 @@ INSERT INTO users (user_id, username, email, created_at, count_lent, count_borro
   (gen_random_uuid(), 'Serge Gnabry',     'serge.gnabry@fcbayern.com',     NOW() - INTERVAL '82 days', 0, 0, 0, 0),
   (gen_random_uuid(), 'Kingsley Coman',   'kingsley.coman@fcbayern.com',   NOW() - INTERVAL '80 days', 0, 0, 0, 0);
 
--- =====================================================================
+-- 
 -- 5) SEED: FAVORS (Soft Debts)
--- =====================================================================
+-- 
 INSERT INTO favors (favor_id, debtor_id, creditor_id, description, is_settled, created_at) VALUES
   (gen_random_uuid(),
    (SELECT user_id FROM users WHERE username = 'Harry Kane'),
@@ -119,10 +119,10 @@ INSERT INTO favors (favor_id, debtor_id, creditor_id, description, is_settled, c
    (SELECT user_id FROM users WHERE username = 'Jamal Musiala'),
    'Covered my round at the team dinner', false, NOW() - INTERVAL '6 days');
 
--- =====================================================================
+--
 -- 6) SEED: BORROWS (Physical Items)
 -- Mix of open / returned / overdue
--- =====================================================================
+-- 
 INSERT INTO borrows (borrow_id, lender_id, borrower_id, item_name, due_date, returned_at, created_at) VALUES
   (gen_random_uuid(),
    (SELECT user_id FROM users WHERE username = 'Serge Gnabry'),
@@ -164,13 +164,13 @@ INSERT INTO borrows (borrow_id, lender_id, borrower_id, item_name, due_date, ret
    (SELECT user_id FROM users WHERE username = 'Alphonso Davies'),
    'Noise-cancelling headphones', CURRENT_DATE - INTERVAL '5 days', NULL, NOW() - INTERVAL '20 days');
 
--- =====================================================================
+-- 
 -- 7) Set counters in users consistently
 -- count_lent       = number of borrows as lender
 -- count_borrowed   = number of borrows as borrower
 -- favors_given     = number of favors as creditor (= favors done)
 -- favors_taken     = number of favors as debtor   (= favors received)
--- =====================================================================
+-- 
 UPDATE users u SET
   count_lent     = (SELECT COUNT(*) FROM borrows WHERE lender_id   = u.user_id),
   count_borrowed = (SELECT COUNT(*) FROM borrows WHERE borrower_id = u.user_id),
