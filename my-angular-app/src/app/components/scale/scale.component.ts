@@ -72,7 +72,7 @@ export class ScaleComponent {
       {
         label: 'Favors received',
         value: stats.favorsTaken,
-        detail: 'Favors others did for you that are still open.',
+        detail: 'Favors received for you that are still open.',
         tone: 'favor',
         filterKey: 'favorsTaken',
       },
