@@ -65,7 +65,7 @@ export class ScaleComponent {
       {
         label: 'Favors given',
         value: stats.favorsGiven,
-        detail: "Favors you've done that haven't been settled yet.",
+        detail: "Favors you've given to others that haven't been settled yet.",
         tone: 'favor',
         filterKey: 'favorsGiven',
       },
