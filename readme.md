@@ -4,7 +4,7 @@ A full-stack web application for small teams to keep track of borrowed items and
 
 Built as the final project for the **Applied Programming (CDIBO1202E)** course at Copenhagen Business School (Spring 2026).
 
-> 📄 The full design rationale, architecture decisions, and reflections are documented in the project report (`docs/CoffeeAndKudos_Report.docx`). This README is a developer setup guide for getting the app running locally.
+> 📄 The full design rationale, architecture decisions, and reflections are documented in the project report. This README is a developer setup guide for getting the app running locally.
 
 ---
 
@@ -35,19 +35,20 @@ Built as the final project for the **Applied Programming (CDIBO1202E)** course a
 
 ```
 .
-├── CoffeeAndKudos.API/        # ASP.NET Core Web API (controllers, Program.cs)
-├── CoffeeAndKudos.Model/      # Entities + repositories (data-access layer)
-├── CoffeeAndKudos.Tests/      # xUnit + Moq unit tests for the controllers
-├── my-angular-app/            # Angular frontend
+├── backend/                     # backend
+    ├── CoffeeAndKudos.API/        # ASP.NET Core Web API (controllers, Program.cs)
+    ├── CoffeeAndKudos.Model/      # Entities + repositories (data-access layer)
+    ├── CoffeeAndKudos.Tests/      # xUnit + Moq unit tests for the controllers
+├── frontend/                    # Angular frontend
 │   ├── src/app/
-│   │   ├── pages/             # login, dashboard
-│   │   ├── components/        # scale, activity-log, create-entry
-│   │   ├── services/          # user, borrow, favor services + auth guard
-│   │   └── models/            # TS interfaces matching the API contract
-│   └── proxy.conf.json        # forwards /api/* to the backend in dev
-├── seed.sql                   # full schema + seed data (idempotent)
-├── PROJ_BACKEND.slnx          # .NET solution file
-└── docs/                      # written report and supporting documents
+│   │   ├── pages/                 # login, dashboard
+│   │   ├── components/            # scale, activity-log, create-entry
+│   │   ├── services/              # user, borrow, favor services + auth guard
+│   │   └── models/                # TS interfaces matching the API contract
+│   └── proxy.conf.json            # forwards /api/* to the backend in dev
+├── seed.sql                       # full schema + seed data (idempotent)
+├── PROJ_BACKEND.slnx              # .NET solution file
+└── docs/                          # written report and supporting documents
 ```
 
 ---
@@ -99,7 +100,7 @@ If you are not using our Supabase instance, also adjust `Host`, `Username`, and 
 ### 4. Frontend
 
 ```bash
-cd my-angular-app
+cd frontend
 npm install
 ```
 
@@ -117,7 +118,7 @@ dotnet run --project CoffeeAndKudos.API
 
 The API will start on `http://localhost:5175` (HTTP) and `https://localhost:7175` (HTTPS). Swagger UI is available at `http://localhost:5175/swagger`.
 
-**Terminal 2 — Frontend** (from `my-angular-app/`):
+**Terminal 2 — Frontend** (from `frontend/`):
 
 ```bash
 npm start
@@ -142,7 +143,7 @@ Covers all three controllers (`UserController`, `BorrowsController`, `FavorsCont
 **Frontend (vitest):**
 
 ```bash
-cd my-angular-app
+cd frontend
 npm test
 ```
 
@@ -177,15 +178,6 @@ The full interactive specification is browsable through Swagger UI at `/swagger`
 ## Architecture in one paragraph
 
 The backend follows the classic layered pattern taught in the course: thin controllers that delegate to repository classes inheriting from a shared `BaseRepository`, which handles connection-string resolution and parameterized SQL execution. The frontend follows a component–service architecture: pages and reusable components stay presentational, while services (`UserService`, `BorrowService`, `FavorService`) encapsulate all HTTP calls and expose RxJS observables. Communication between the layers is exclusively JSON over HTTP, with CORS configured to allow the Angular dev server. For the design rationale and trade-offs, see the project report.
-
----
-
-## Troubleshooting
-
-- **`Database password missing` on backend startup** — the User Secret was not set in the correct project. Make sure you ran `dotnet user-secrets set` inside the `CoffeeAndKudos.API/` folder.
-- **`HTTP 0` / CORS errors in the browser** — the proxy is the easy fix: the frontend must use `npm start`, not a hard-coded backend URL. If you bypass the proxy, add your origin to `AllowAngularDev` in `Program.cs`.
-- **`relation "users" does not exist`** — `seed.sql` was not run against the connected database. Re-run it (it is idempotent).
-- **Port already in use** — the backend defaults to 5175. To change it, edit `CoffeeAndKudos.API/Properties/launchSettings.json` and update `proxy.conf.json` to match.
 
 ---
 
