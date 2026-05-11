@@ -70,9 +70,9 @@ export class ScaleComponent {
         filterKey: 'favorsGiven',
       },
       {
-        label: 'Favors received',
+        label: 'Favors owed by you',
         value: stats.favorsTaken,
-        detail: 'Favors received for you that are still open.',
+        detail: 'Favors others did for you that are still open.',
         tone: 'favor',
         filterKey: 'favorsTaken',
       },

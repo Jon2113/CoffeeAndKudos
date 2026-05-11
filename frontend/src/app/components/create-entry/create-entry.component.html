@@ -1,0 +1,147 @@
+@if (isOpen) {
+  <div class="composer-overlay" (click)="closePanel()">
+    <section class="composer-panel" (click)="stopPanelClick($event)">
+      <header class="composer-header">
+        <div>
+          <p class="eyebrow">New Entry</p>
+          <h2>{{ modalTitle }}</h2>
+        </div>
+
+        <button
+          type="button"
+          class="icon-close-button"
+          aria-label="Close panel"
+          (click)="closePanel()"
+        >
+          &times;
+        </button>
+      </header>
+
+      <!-- Entry type: favor or borrow -->
+      <div class="toggle-row">
+        <button
+          type="button"
+          class="toggle-chip favor"
+          [class.active]="entryType === 'favor'"
+          (click)="chooseType('favor')"
+        >
+          Favor
+        </button>
+        <button
+          type="button"
+          class="toggle-chip borrow"
+          [class.active]="entryType === 'borrow'"
+          (click)="chooseType('borrow')"
+        >
+          Borrow
+        </button>
+      </div>
+
+      <!-- Direction: who gave/lent -->
+      <div class="toggle-row direction">
+        <button
+          type="button"
+          class="toggle-chip"
+          [class.active]="direction === 'outgoing'"
+          (click)="chooseDirection('outgoing')"
+        >
+          {{ firstDirectionLabel }}
+        </button>
+        <button
+          type="button"
+          class="toggle-chip"
+          [class.active]="direction === 'incoming'"
+          (click)="chooseDirection('incoming')"
+        >
+          {{ secondDirectionLabel }}
+        </button>
+      </div>
+
+      <label class="field-stack">
+        <span>{{ titleLabel }}</span>
+        <input
+          type="text"
+          [(ngModel)]="title"
+          name="title"
+          [placeholder]="titlePlaceholder"
+        >
+      </label>
+
+      <label class="field-stack">
+        <span>With who?</span>
+        <div class="user-select-grid">
+          @for (user of users; track user.userId) {
+            <button
+              type="button"
+              class="user-chip"
+              [class.is-selected]="isUserSelected(user.userId)"
+              (click)="toggleUserSelection(user.userId)"
+            >
+              <span class="check-indicator">{{ isUserSelected(user.userId) ? '✓' : '+' }}</span>
+              <span>{{ user.username }}</span>
+            </button>
+          }
+        </div>
+      </label>
+
+      <p class="selection-summary">{{ selectedUsersSummary }}</p>
+
+      <div class="field-grid">
+        <label class="field-stack">
+          <span>Date</span>
+          <input type="date" [(ngModel)]="createdOn" name="createdOn">
+        </label>
+
+        @if (entryType === 'borrow') {
+          <label class="field-stack">
+            <span>Due date</span>
+            <input type="date" [(ngModel)]="dueDate" name="dueDate">
+          </label>
+        }
+      </div>
+
+      <!-- Settle existing open favors alongside this new entry -->
+      @if (selectedUserIds.length > 0) {
+        <div class="settle-section">
+          <button type="button" class="ghost-button compact-button settle-toggle" (click)="toggleSettleSection()">
+            {{ isSettleExpanded ? 'Hide' : '+ Also settle existing favors?' }}
+          </button>
+
+          @if (isSettleExpanded) {
+            <div class="settle-list">
+              @if (isLoadingSettleable) {
+                <p class="settle-hint">Loading…</p>
+              }
+              @if (!isLoadingSettleable && settleableFavors.length === 0) {
+                <p class="settle-hint">No open favors with the selected people.</p>
+              }
+              @for (favor of settleableFavors; track favor.favorId) {
+                <label class="settle-item">
+                  <input
+                    type="checkbox"
+                    [checked]="isSettleSelected(favor.favorId)"
+                    (change)="toggleSettleId(favor.favorId)"
+                  >
+                  <span>{{ getSettleLabel(favor) }}</span>
+                </label>
+              }
+            </div>
+          }
+        </div>
+      }
+
+      <p class="composer-summary">{{ summaryText }}</p>
+
+      @if (errorMessage) {
+        <p class="status-banner error">{{ errorMessage }}</p>
+      }
+
+      <footer class="composer-footer">
+        <button type="button" class="ghost-button" (click)="closePanel()">Cancel</button>
+        <button type="button" class="primary-button" [disabled]="!canSave" (click)="saveEntry()">
+          {{ isSaving ? 'Saving…' : 'Save entry' }}
+        </button>
+      </footer>
+    </section>
+  </div>
+}

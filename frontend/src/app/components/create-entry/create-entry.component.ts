@@ -1,4 +1,3 @@
-import { NgFor, NgIf } from '@angular/common';
 import { Component, EventEmitter, Input, OnChanges, Output, SimpleChanges } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { forkJoin } from 'rxjs';
@@ -15,7 +14,7 @@ import { FavorService } from '../../services/favor.service';
 @Component({
   selector: 'app-create-entry',
   standalone: true,
-  imports: [NgIf, NgFor, FormsModule],
+  imports: [FormsModule],
   templateUrl: './create-entry.component.html',
   styleUrls: ['./create-entry.component.css'],
 })
@@ -123,6 +122,10 @@ export class CreateEntryComponent implements OnChanges {
   chooseType(type: EntryType): void {
     this.entryType = type;
     this.errorMessage = '';
+    // Reset settle state so stale selections from a previous type can't be saved.
+    this.isSettleExpanded = false;
+    this.settleableFavors = [];
+    this.settleIds = [];
   }
 
   chooseDirection(direction: EntryDirection): void {

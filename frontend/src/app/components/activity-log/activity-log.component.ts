@@ -27,7 +27,7 @@ export class ActivityLogComponent implements OnChanges {
     countLent: 'Items lent by you',
     countBorrowed: 'Items borrowed by you',
     favorsGiven: 'Favors done by you',
-    favorsTaken: 'Favors owed to you',
+    favorsTaken: 'Favors owed by you',
   };
 
   @Input() entries: ActivityEntry[] = [];
