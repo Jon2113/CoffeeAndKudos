@@ -2,7 +2,6 @@ import { ChangeDetectorRef, Component, OnDestroy, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { forkJoin, timeout } from 'rxjs';
-
 import { ActivityLogComponent } from '../../components/activity-log/activity-log.component';
 import { CreateEntryComponent } from '../../components/create-entry/create-entry.component';
 import { ScaleComponent } from '../../components/scale/scale.component';
