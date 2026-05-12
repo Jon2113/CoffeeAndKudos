@@ -1,4 +1,4 @@
-import { DatePipe, NgFor, NgIf, UpperCasePipe } from '@angular/common';
+import { DatePipe, UpperCasePipe } from '@angular/common';
 import { Component, EventEmitter, Input, OnChanges, Output, SimpleChanges } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 
@@ -17,7 +17,7 @@ type ActivityDateSort = 'newest' | 'oldest' | 'dueSoon';
 @Component({
   selector: 'app-activity-log',
   standalone: true,
-  imports: [NgIf, NgFor, FormsModule, UpperCasePipe, DatePipe],
+  imports: [FormsModule, UpperCasePipe, DatePipe],
   templateUrl: './activity-log.component.html',
   styleUrls: ['./activity-log.component.css'],
 })
