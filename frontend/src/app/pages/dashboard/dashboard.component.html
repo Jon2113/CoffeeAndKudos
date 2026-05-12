@@ -4,7 +4,9 @@
   <section class="hero-panel">
     <div class="hero-copy">
       <p class="eyebrow">Dashboard</p>
-      <h1 *ngIf="currentUser">{{ currentUser.username }}'s balance sheet.</h1>
+      @if (currentUser) {
+        <h1>{{ currentUser.username }}'s balance sheet.</h1>
+      }
       <p>{{ viewDescription }}</p>
     </div>
 
@@ -17,9 +19,9 @@
           (ngModelChange)="onFilterChange($event)"
         >
           <option value="">Everyone</option>
-          <option *ngFor="let user of otherUsers" [value]="user.userId">
-            {{ user.username }}
-          </option>
+          @for (user of otherUsers; track user.userId) {
+            <option [value]="user.userId">{{ user.username }}</option>
+          }
         </select>
       </label>
 
@@ -29,18 +31,22 @@
     </div>
   </section>
 
-  <p *ngIf="errorMessage" class="status-banner error">{{ errorMessage }}</p>
+  @if (errorMessage) {
+    <p class="status-banner error">{{ errorMessage }}</p>
+  }
 
   <!-- Loading state shown while the initial forkJoin request is in flight -->
-  <section *ngIf="isLoading" class="loading-card">
-    <div class="spinner"></div>
-    <div>
-      <p class="eyebrow">One moment</p>
-      <h2>Loading your data…</h2>
-    </div>
-  </section>
+  @if (isLoading) {
+    <section class="loading-card">
+      <div class="spinner"></div>
+      <div>
+        <p class="eyebrow">One moment</p>
+        <h2>Loading your data…</h2>
+      </div>
+    </section>
+  }
 
-  <ng-container *ngIf="!isLoading && !errorMessage">
+  @if (!isLoading && !errorMessage) {
 
     <!-- Four stat cards; clicking a card toggles a filter on the activity log -->
     <app-scale
@@ -60,7 +66,7 @@
       (entryUpdated)="refreshDashboard()"
     ></app-activity-log>
 
-  </ng-container>
+  }
 
   <!-- Floating action button — opens the entry composer panel -->
   <button

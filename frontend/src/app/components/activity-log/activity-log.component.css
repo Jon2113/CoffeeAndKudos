@@ -113,6 +113,11 @@
   opacity: 0.78;
 }
 
+.log-item.is-overdue .log-status {
+  color: #b91c1c;
+  font-weight: 600;
+}
+
 .log-item.borrow .log-stripe {
   background: linear-gradient(180deg, #2e7d32, #6bbf59);
 }
@@ -151,6 +156,31 @@
 
 .log-main p {
   margin: 0 0 0.7rem;
+}
+
+.direction-highlight {
+  font-weight: 600;
+}
+
+.direction-chip {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.15rem 0.55rem;
+  border-radius: 999px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+}
+
+.direction-chip.outgoing {
+  background: rgba(5, 150, 105, 0.13);
+  color: #065f46;
+}
+
+.direction-chip.incoming {
+  background: rgba(124, 58, 237, 0.11);
+  color: #5b21b6;
 }
 
 .edit-panel {

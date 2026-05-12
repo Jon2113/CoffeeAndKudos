@@ -83,6 +83,18 @@ export class FavorService {
     );
   }
 
+  // Reverses a settled favor back to open by flipping isSettled to false.
+  reopenFavor(favorId: string): Observable<void> {
+    return this.http.get<Favor>(`${this.apiUrl}/${favorId}`).pipe(
+      switchMap((favor) =>
+        this.http.put<void>(this.apiUrl, {
+          ...favor,
+          isSettled: false,
+        }),
+      ),
+    );
+  }
+
   private getCurrentUserId$(): Observable<string> {
     const currentUserId = localStorage.getItem(CURRENT_USER_STORAGE_KEY);
     return currentUserId

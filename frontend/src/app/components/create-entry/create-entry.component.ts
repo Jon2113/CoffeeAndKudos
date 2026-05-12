@@ -42,6 +42,8 @@ export class CreateEntryComponent implements OnChanges {
   settleIds: string[] = [];
   isLoadingSettleable = false;
 
+  private prefetchedFavors: Favor[] | null = null;
+
   constructor(
     private readonly borrowService: BorrowService,
     private readonly favorService: FavorService,
@@ -131,6 +133,9 @@ export class CreateEntryComponent implements OnChanges {
   chooseDirection(direction: EntryDirection): void {
     this.direction = direction;
     this.errorMessage = '';
+    this.isSettleExpanded = false;
+    this.settleableFavors = [];
+    this.settleIds = [];
   }
 
   toggleUserSelection(userId: string): void {
@@ -264,29 +269,47 @@ export class CreateEntryComponent implements OnChanges {
     this.settleableFavors = [];
     this.settleIds = [];
     this.isLoadingSettleable = false;
+    this.prefetchedFavors = null;
+    this.startFavorPrefetch();
   }
-
-  private loadSettleableFavors(): void {
-    this.isLoadingSettleable = true;
-    this.settleableFavors = [];
-    this.settleIds = [];
-
+  // Fetch all current-user favors as soon as the panel opens so the settle list
+  // is ready instantly when the user expands it instead of loading on demand.
+  private startFavorPrefetch(): void {
     this.favorService.getFavors().subscribe({
       next: (favors) => {
-        this.settleableFavors = favors.filter((f) => {
-          if (f.isSettled) {
-            return false;
-          }
-          const counterpartyId =
-            f.creditorId === this.currentUserId ? f.debtorId : f.creditorId;
-          return this.selectedUserIds.includes(counterpartyId);
-        });
-        this.isLoadingSettleable = false;
+        this.prefetchedFavors = favors;
+        if (this.isSettleExpanded) {
+          this.applySettleFilter();
+        }
       },
       error: () => {
         this.isLoadingSettleable = false;
+        this.prefetchedFavors = [];
       },
     });
+  }
+
+  private loadSettleableFavors(): void {
+    this.settleableFavors = [];
+    this.settleIds = [];
+    if (this.prefetchedFavors !== null) {
+      this.applySettleFilter();
+    } else {
+      this.isLoadingSettleable = true;
+    }
+  }
+
+  private applySettleFilter(): void {
+    this.settleableFavors = (this.prefetchedFavors ?? []).filter((f) => {
+      if (f.isSettled) {
+        return false;
+      }
+      if (this.direction === 'outgoing') {
+        return this.selectedUserIds.includes(f.creditorId) && f.debtorId === this.currentUserId;
+      }
+      return f.creditorId === this.currentUserId && this.selectedUserIds.includes(f.debtorId);
+    });
+    this.isLoadingSettleable = false;
   }
 
   private resolveUserName(userId: string): string {

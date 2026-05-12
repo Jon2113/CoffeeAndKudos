@@ -9,20 +9,21 @@
 
   <!-- Each button is a clickable stat card; clicking emits a filter event to the parent dashboard -->
   <div class="scale-grid">
-    <button
-      *ngFor="let card of cards"
-      type="button"
-      class="stat-card"
-      [ngClass]="[
-        card.tone,
-        isActive(card.filterKey) ? 'is-active' : '',
-        isMuted(card.filterKey) ? 'is-muted' : ''
-      ]"
-      (click)="selectFilter(card.filterKey)"
-    >
-      <span class="stat-label">{{ card.label }}</span>
-      <strong class="stat-value">{{ card.value }}</strong>
-      <p>{{ card.detail }}</p>
-    </button>
+    @for (card of cards; track card.filterKey) {
+      <button
+        type="button"
+        class="stat-card"
+        [ngClass]="[
+          card.tone,
+          isActive(card.filterKey) ? 'is-active' : '',
+          isMuted(card.filterKey) ? 'is-muted' : ''
+        ]"
+        (click)="selectFilter(card.filterKey)"
+      >
+        <span class="stat-label">{{ card.label }}</span>
+        <strong class="stat-value">{{ card.value }}</strong>
+        <p>{{ card.detail }}</p>
+      </button>
+    }
   </div>
 </section>

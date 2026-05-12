@@ -85,6 +85,18 @@ export class BorrowService {
     );
   }
 
+  // Reverses a returned borrow back to open by clearing returnedAt.
+  reopenBorrow(borrowId: string): Observable<void> {
+    return this.http.get<Borrow>(`${this.apiUrl}/${borrowId}`).pipe(
+      switchMap((borrow) =>
+        this.http.put<void>(this.apiUrl, {
+          ...borrow,
+          returnedAt: null,
+        }),
+      ),
+    );
+  }
+
   private getCurrentUserId$(): Observable<string> {
     const currentUserId = localStorage.getItem(CURRENT_USER_STORAGE_KEY);
     return currentUserId

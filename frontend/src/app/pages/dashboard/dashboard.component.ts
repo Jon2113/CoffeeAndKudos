@@ -1,9 +1,7 @@
-import { NgFor, NgIf } from '@angular/common';
 import { ChangeDetectorRef, Component, OnDestroy, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { forkJoin, timeout } from 'rxjs';
-
 import { ActivityLogComponent } from '../../components/activity-log/activity-log.component';
 import { CreateEntryComponent } from '../../components/create-entry/create-entry.component';
 import { ScaleComponent } from '../../components/scale/scale.component';
@@ -20,7 +18,7 @@ import { UserService } from '../../services/user.service';
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [NgIf, NgFor, FormsModule, ScaleComponent, ActivityLogComponent, CreateEntryComponent],
+  imports: [FormsModule, ScaleComponent, ActivityLogComponent, CreateEntryComponent],
   templateUrl: './dashboard.component.html',
   styleUrls: ['./dashboard.component.css'],
 })
@@ -221,7 +219,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
           : borrow.dueDate
             ? `Due on ${this.formatDate(borrow.dueDate)}`
             : 'Open',
-        directionText: isOutgoing ? 'You lent this to' : 'You borrowed this from',
+        directionText: isOutgoing ? 'You lent this' : 'You borrowed this',
         actionText: 'Mark as returned',
         accent: 'borrow' as const,
       };
@@ -243,7 +241,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
         dueDate: null,
         isCompleted: favor.isSettled,
         statusText: favor.isSettled ? 'Settled' : 'Open',
-        directionText: isOutgoing ? 'You did this favor for' : 'You received this favor from',
+        directionText: isOutgoing ? 'You did this favor' : 'You received this favor',
         actionText: 'Mark as settled',
         accent: 'favor' as const,
       };
