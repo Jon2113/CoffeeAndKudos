@@ -2,9 +2,39 @@
   <section class="login-panel">
     <div class="intro-copy">
       <p class="eyebrow">Coffee &amp; Kudos</p>
-      <h1>Pick your profile.</h1>
-      <p>Select a profile below and we'll open your personal dashboard right away.</p>
+      <h1>Sign in.</h1>
+      <p>Enter your email and password to open your personal dashboard.</p>
     </div>
+
+    <!-- Sign-in form -->
+    <form [formGroup]="signInForm" class="sign-in-form" (ngSubmit)="signIn()">
+      <mat-form-field appearance="outline" class="mat-full-width">
+        <mat-label>Email</mat-label>
+        <input matInput type="email" formControlName="email" placeholder="name@example.com" autocomplete="email">
+        @if (signInForm.get('email')?.hasError('required')) {
+          <mat-error>Email is required</mat-error>
+        }
+        @if (signInForm.get('email')?.hasError('email')) {
+          <mat-error>Enter a valid email address</mat-error>
+        }
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" class="mat-full-width">
+        <mat-label>Password</mat-label>
+        <input matInput type="password" formControlName="password" autocomplete="current-password">
+        @if (signInForm.get('password')?.hasError('required')) {
+          <mat-error>Password is required</mat-error>
+        }
+      </mat-form-field>
+
+      @if (signInError) {
+        <p class="status-banner error">{{ signInError }}</p>
+      }
+
+      <button type="submit" class="primary-button" [disabled]="isSigningIn || signInForm.invalid">
+        {{ isSigningIn ? 'Signing in…' : 'Sign in' }}
+      </button>
+    </form>
 
     @if (isLoading) {
       <section class="loading-card">
@@ -22,9 +52,8 @@
 
     @if (!isLoading && !errorMessage && users.length > 0) {
       <div class="user-grid">
-        <!-- Clicking the card opens the dashboard for that user -->
         @for (user of users; track trackByUserId($index, user)) {
-          <article class="user-card" (click)="selectUser(user.userId)">
+          <article class="user-card">
             <span class="user-avatar">{{ user.username.charAt(0) | uppercase }}</span>
 
             <div class="user-copy">
@@ -32,13 +61,7 @@
               <p>{{ user.email || 'No email provided' }}</p>
             </div>
 
-            <div class="user-metrics">
-              <span>{{ getMetrics(user.userId).countLent }} lent</span>
-              <span>{{ getMetrics(user.userId).favorsGiven }} favors given</span>
-            </div>
-
-            <!-- Stop propagation so Edit/Delete don't also trigger card navigation -->
-            <div class="user-actions" (click)="$event.stopPropagation()">
+            <div class="user-actions">
               <button
                 type="button"
                 class="ghost-button compact-button"
@@ -66,9 +89,8 @@
               }
             </div>
 
-            <!-- Inline edit form — also blocked from triggering card navigation -->
             @if (isEditingUser(user.userId)) {
-              <section class="edit-user-form" (click)="$event.stopPropagation()">
+              <section class="edit-user-form">
                 <label class="field-stack">
                   <span>Username</span>
                   <input
@@ -112,13 +134,6 @@
       </div>
     }
 
-    @if (manageErrorMessage) {
-      <p class="status-banner error">{{ manageErrorMessage }}</p>
-    }
-    @if (manageInfoMessage) {
-      <p class="status-banner success">{{ manageInfoMessage }}</p>
-    }
-
     @if (!isLoading && !errorMessage) {
       <section class="create-user-panel">
         <div class="create-user-header">
@@ -151,13 +166,6 @@
                 <mat-error>Enter a valid email address</mat-error>
               }
             </mat-form-field>
-
-            @if (createErrorMessage) {
-              <p class="status-banner error">{{ createErrorMessage }}</p>
-            }
-            @if (createInfoMessage) {
-              <p class="status-banner success">{{ createInfoMessage }}</p>
-            }
 
             <button type="submit" class="primary-button" [disabled]="!canCreateUser">
               {{ isCreatingUser ? 'Creating…' : 'Create profile' }}

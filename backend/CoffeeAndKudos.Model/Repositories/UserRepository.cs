@@ -149,6 +149,28 @@ where user_id = @user_id";
         }
     }
 
+    // Returns the user whose email and password match, or null if credentials are invalid.
+    // Uses pgcrypto crypt() to verify the stored bcrypt hash without exposing the hash to C#.
+    public virtual User? GetUserByEmailAndPassword(string email, string password)
+    {
+        NpgsqlConnection? dbConn = null;
+        try
+        {
+            dbConn = new NpgsqlConnection(ConnectionString);
+            var cmd = dbConn.CreateCommand();
+            cmd.CommandText = "select * from public.users where email = @email and password_hash = crypt(@password, password_hash)";
+            cmd.Parameters.Add("@email",    NpgsqlDbType.Varchar).Value = email;
+            cmd.Parameters.Add("@password", NpgsqlDbType.Varchar).Value = password;
+
+            var data = GetData(dbConn, cmd);
+            return data.Read() ? MapUser(data) : null;
+        }
+        finally
+        {
+            dbConn?.Close();
+        }
+    }
+
     // Maps a single data reader row to a User entity.
     private static User MapUser(NpgsqlDataReader data)
     {
@@ -156,11 +178,12 @@ where user_id = @user_id";
         {
             Username      = data["username"].ToString() ?? string.Empty,
             Email         = data["email"].ToString() ?? string.Empty,
-            CreatedAt     = data["created_at"]     == DBNull.Value ? DateTime.UtcNow : (DateTime)data["created_at"],
-            CountLent     = data["count_lent"]     == DBNull.Value ? 0 : (int)data["count_lent"],
-            CountBorrowed = data["count_borrowed"] == DBNull.Value ? 0 : (int)data["count_borrowed"],
-            FavorsGiven   = data["favors_given"]   == DBNull.Value ? 0 : (int)data["favors_given"],
-            FavorsTaken   = data["favors_taken"]   == DBNull.Value ? 0 : (int)data["favors_taken"]
+            Role          = data["role"]          == DBNull.Value ? "user"           : data["role"].ToString() ?? "user",
+            CreatedAt     = data["created_at"]    == DBNull.Value ? DateTime.UtcNow  : (DateTime)data["created_at"],
+            CountLent     = data["count_lent"]    == DBNull.Value ? 0                : (int)data["count_lent"],
+            CountBorrowed = data["count_borrowed"]== DBNull.Value ? 0                : (int)data["count_borrowed"],
+            FavorsGiven   = data["favors_given"]  == DBNull.Value ? 0                : (int)data["favors_given"],
+            FavorsTaken   = data["favors_taken"]  == DBNull.Value ? 0                : (int)data["favors_taken"]
         };
     }
 }

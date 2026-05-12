@@ -9,6 +9,7 @@ import { Borrow } from '../../models/borrow.model';
 import { ActivityEntry, EntryDirection, ScaleFilterKey, ScaleStats } from '../../models/dashboard.model';
 import { Favor } from '../../models/favor.model';
 import { User } from '../../models/user.model';
+import { AuthService } from '../../services/auth.service';
 import { BorrowService } from '../../services/borrow.service';
 import { FavorService } from '../../services/favor.service';
 import { UserService } from '../../services/user.service';
@@ -51,6 +52,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
   constructor(
     private readonly userService: UserService,
+    private readonly authService: AuthService,
     private readonly borrowService: BorrowService,
     private readonly favorService: FavorService,
     private readonly router: Router,
@@ -113,7 +115,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
   }
 
   switchUser(): void {
-    this.userService.logout();
+    this.authService.logout();
     void this.router.navigate(['/login']);
   }
 

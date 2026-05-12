@@ -4,34 +4,32 @@ import { FormControl, FormGroup, FormsModule, ReactiveFormsModule, Validators } 
 import { MatButtonModule } from '@angular/material/button';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
+import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { Router } from '@angular/router';
-import { forkJoin, timeout } from 'rxjs';
 
-import { Borrow } from '../../models/borrow.model';
-import { Favor } from '../../models/favor.model';
 import { User } from '../../models/user.model';
-import { BorrowService } from '../../services/borrow.service';
-import { FavorService } from '../../services/favor.service';
+import { AuthService } from '../../services/auth.service';
 import { UserService } from '../../services/user.service';
 
-// Computed active-only metrics for a single user, shown on their profile card.
-interface UserCardMetrics {
-  countLent: number;
-  favorsGiven: number;
-}
-
-// Login page: lists all users and lets the visitor pick an identity.
-// Also handles user creation, inline editing, and deletion.
+// Login page: email+password sign-in form plus user management (create, edit, delete).
 @Component({
   selector: 'app-login',
   standalone: true,
-  imports: [FormsModule, ReactiveFormsModule, UpperCasePipe, MatFormFieldModule, MatInputModule, MatButtonModule],
+  imports: [FormsModule, ReactiveFormsModule, UpperCasePipe, MatFormFieldModule, MatInputModule, MatButtonModule, MatSnackBarModule],
   templateUrl: './login.component.html',
   styleUrls: ['./login.component.css'],
 })
 export class LoginComponent implements OnInit, OnDestroy {
   users: User[] = [];
-  userMetrics = new Map<string, UserCardMetrics>();
+
+  // Sign-in form with email and password.
+  readonly signInForm = new FormGroup({
+    email: new FormControl('', [Validators.required, Validators.email]),
+    password: new FormControl('', [Validators.required]),
+  });
+
+  isSigningIn = false;
+  signInError = '';
 
   // Reactive form for creating a new user profile.
   readonly createForm = new FormGroup({
@@ -48,25 +46,21 @@ export class LoginComponent implements OnInit, OnDestroy {
   editingUserId = '';
   editUsername = '';
   editEmail = '';
-  createInfoMessage = '';
-  createErrorMessage = '';
-  manageInfoMessage = '';
-  manageErrorMessage = '';
   errorMessage = '';
   private hardTimeoutHandle: ReturnType<typeof setTimeout> | null = null;
 
   constructor(
     private readonly userService: UserService,
-    private readonly borrowService: BorrowService,
-    private readonly favorService: FavorService,
+    private readonly authService: AuthService,
+    private readonly snackBar: MatSnackBar,
     private readonly router: Router,
     private readonly cdr: ChangeDetectorRef,
   ) {}
 
   ngOnInit(): void {
-    // Always clear any existing session so the user must explicitly reselect their identity.
-    if (this.userService.getCurrentUserId()) {
-      this.userService.logout();
+    // Always clear any existing session so the user must explicitly sign in again.
+    if (this.authService.isLoggedIn()) {
+      this.authService.logout();
     }
 
     this.loadUsers();
@@ -76,18 +70,28 @@ export class LoginComponent implements OnInit, OnDestroy {
     this.clearHardTimeout();
   }
 
-  selectUser(userId: string): void {
-    this.userService.login(userId);
-    void this.router.navigate(['/dashboard']);
+  signIn(): void {
+    if (this.isSigningIn || this.signInForm.invalid) return;
+
+    this.isSigningIn = true;
+    this.signInError = '';
+
+    const { email, password } = this.signInForm.value;
+    this.authService.login(email ?? '', password ?? '').subscribe({
+      next: () => {
+        this.isSigningIn = false;
+        void this.router.navigate(['/dashboard']);
+      },
+      error: () => {
+        this.isSigningIn = false;
+        this.signInError = 'Invalid email or password.';
+        this.cdr.detectChanges();
+      },
+    });
   }
 
   trackByUserId(_index: number, user: User): string {
     return user.userId;
-  }
-
-  // Returns live-computed metrics for a user card, falling back to zeros if not yet loaded.
-  getMetrics(userId: string): UserCardMetrics {
-    return this.userMetrics.get(userId) ?? { countLent: 0, favorsGiven: 0 };
   }
 
   get canCreateUser(): boolean {
@@ -105,10 +109,6 @@ export class LoginComponent implements OnInit, OnDestroy {
 
   toggleCreatePanel(): void {
     this.isCreatePanelOpen = !this.isCreatePanelOpen;
-    this.createErrorMessage = '';
-    this.createInfoMessage = '';
-    this.manageErrorMessage = '';
-    this.manageInfoMessage = '';
     if (!this.isCreatePanelOpen) {
       this.createForm.reset();
     }
@@ -120,8 +120,6 @@ export class LoginComponent implements OnInit, OnDestroy {
     }
 
     this.isCreatingUser = true;
-    this.createErrorMessage = '';
-    this.createInfoMessage = '';
 
     const { username, email } = this.createForm.value;
 
@@ -131,15 +129,13 @@ export class LoginComponent implements OnInit, OnDestroy {
         next: () => {
           this.isCreatingUser = false;
           this.createForm.reset();
-          this.createInfoMessage = 'Profile created — select it below to open your dashboard.';
-          this.manageErrorMessage = '';
-          this.manageInfoMessage = '';
+          this.snackBar.open('Profile created successfully.', 'Close', { duration: 3000 });
           this.loadUsers(false);
           this.cdr.detectChanges();
         },
         error: () => {
           this.isCreatingUser = false;
-          this.createErrorMessage = 'Could not create profile. Please check API and database connectivity.';
+          this.snackBar.open('Could not create profile. Please check API and database connectivity.', 'Close', { duration: 4000 });
           this.cdr.detectChanges();
         },
       });
@@ -153,8 +149,6 @@ export class LoginComponent implements OnInit, OnDestroy {
     this.editingUserId = user.userId;
     this.editUsername = user.username;
     this.editEmail = user.email;
-    this.manageErrorMessage = '';
-    this.manageInfoMessage = '';
   }
 
   cancelUserEdit(): void {
@@ -173,8 +167,6 @@ export class LoginComponent implements OnInit, OnDestroy {
     }
 
     this.isSavingUserChanges = true;
-    this.manageErrorMessage = '';
-    this.manageInfoMessage = '';
 
     this.userService
       .updateUser({
@@ -185,15 +177,14 @@ export class LoginComponent implements OnInit, OnDestroy {
       .subscribe({
         next: () => {
           this.isSavingUserChanges = false;
-          this.manageInfoMessage = 'Profile updated successfully.';
-          this.manageErrorMessage = '';
+          this.snackBar.open('Profile updated successfully.', 'Close', { duration: 3000 });
           this.cancelUserEdit();
           this.loadUsers(false);
           this.cdr.detectChanges();
         },
         error: () => {
           this.isSavingUserChanges = false;
-          this.manageErrorMessage = 'Could not update profile. Please check API and database connectivity.';
+          this.snackBar.open('Could not update profile. Please check API and database connectivity.', 'Close', { duration: 4000 });
           this.cdr.detectChanges();
         },
       });
@@ -204,8 +195,6 @@ export class LoginComponent implements OnInit, OnDestroy {
       return;
     }
     this.pendingDeleteUserId = user.userId;
-    this.manageErrorMessage = '';
-    this.manageInfoMessage = '';
   }
 
   confirmDeleteUser(user: User): void {
@@ -215,8 +204,6 @@ export class LoginComponent implements OnInit, OnDestroy {
 
     this.busyDeleteUserId = user.userId;
     this.pendingDeleteUserId = '';
-    this.manageErrorMessage = '';
-    this.manageInfoMessage = '';
 
     this.userService.deleteUser(user.userId).subscribe({
       next: () => {
@@ -224,14 +211,13 @@ export class LoginComponent implements OnInit, OnDestroy {
         if (this.editingUserId === user.userId) {
           this.cancelUserEdit();
         }
-        this.manageInfoMessage = 'Profile removed.';
-        this.manageErrorMessage = '';
+        this.snackBar.open('Profile removed.', 'Close', { duration: 3000 });
         this.loadUsers(false);
         this.cdr.detectChanges();
       },
       error: () => {
         this.busyDeleteUserId = '';
-        this.manageErrorMessage = 'Could not remove profile. Please check API and database connectivity.';
+        this.snackBar.open('Could not remove profile. Please check API and database connectivity.', 'Close', { duration: 4000 });
         this.cdr.detectChanges();
       },
     });
@@ -252,7 +238,6 @@ export class LoginComponent implements OnInit, OnDestroy {
       this.isLoading = true;
     }
 
-    // Hard timeout as a last-resort guard in case the RxJS timeout fires too late.
     this.hardTimeoutHandle = setTimeout(() => {
       if (this.isLoading) {
         this.errorMessage =
@@ -262,27 +247,19 @@ export class LoginComponent implements OnInit, OnDestroy {
       }
     }, 12000);
 
-    // Load users, borrows, and favors in parallel so we can compute accurate per-user metrics.
-    forkJoin({
-      users: this.userService.getUsers(),
-      borrows: this.borrowService.getAllBorrows(),
-      favors: this.favorService.getAllFavors(),
-    })
-      .pipe(timeout(10000))
+    this.userService
+      .getUsers()
       .subscribe({
-        next: ({ users, borrows, favors }) => {
+        next: (users) => {
           this.clearHardTimeout();
           this.users = users;
-          this.userMetrics = this.buildUserMetrics(users, borrows, favors);
           this.isLoading = false;
           this.cdr.detectChanges();
         },
         error: (error: unknown) => {
           this.clearHardTimeout();
           const maybeHttpError = error as { status?: number; name?: string };
-          if (maybeHttpError?.name === 'TimeoutError') {
-            this.errorMessage = 'Request timed out — please check API, proxy, and database connectivity.';
-          } else if (maybeHttpError?.status) {
+          if (maybeHttpError?.status) {
             this.errorMessage = `Could not load profiles (HTTP ${maybeHttpError.status}).`;
           } else {
             this.errorMessage = 'Could not load profiles. Please check that the API is running.';
@@ -291,30 +268,6 @@ export class LoginComponent implements OnInit, OnDestroy {
           this.cdr.detectChanges();
         },
       });
-  }
-
-  // Computes active borrow/favor counts per user from live data so the login page
-  // never shows stale DB-stored counter values.
-  private buildUserMetrics(
-    users: User[],
-    borrows: Borrow[],
-    favors: Favor[],
-  ): Map<string, UserCardMetrics> {
-    const metrics = new Map<string, UserCardMetrics>();
-
-    for (const user of users) {
-      const countLent = borrows.filter(
-        (b) => !b.returnedAt && b.lenderId === user.userId,
-      ).length;
-
-      const favorsGiven = favors.filter(
-        (f) => !f.isSettled && f.creditorId === user.userId,
-      ).length;
-
-      metrics.set(user.userId, { countLent, favorsGiven });
-    }
-
-    return metrics;
   }
 
   private clearHardTimeout(): void {

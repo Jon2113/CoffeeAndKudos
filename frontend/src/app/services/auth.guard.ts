@@ -1,14 +1,14 @@
 import { inject } from '@angular/core';
 import { CanActivateFn, Router } from '@angular/router';
 
-import { UserService } from './user.service';
+import { AuthService } from './auth.service';
 
-// Blocks navigation to protected routes when no user session is active.
+// Blocks navigation to protected routes when no valid JWT token is present.
 // Returns a UrlTree to /login so Angular handles the redirect cleanly
 // and the original URL is not added to the browser history.
 export const authGuard: CanActivateFn = () => {
   const router = inject(Router);
-  const userService = inject(UserService);
+  const authService = inject(AuthService);
 
-  return userService.getCurrentUserId() ? true : router.createUrlTree(['/login']);
+  return authService.isLoggedIn() ? true : router.createUrlTree(['/login']);
 };

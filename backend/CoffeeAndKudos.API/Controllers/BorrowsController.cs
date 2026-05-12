@@ -1,9 +1,11 @@
 using CoffeeAndKudos.Model.Entities;
 using CoffeeAndKudos.Model.Repositories;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace CoffeeAndKudos.API.Controllers;
 
+[Authorize]
 [ApiController]
 [Route("api/[controller]")]
 public class BorrowsController : ControllerBase

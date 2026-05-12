@@ -1,9 +1,11 @@
 using CoffeeAndKudos.Model.Entities;
 using CoffeeAndKudos.Model.Repositories;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace CoffeeAndKudos.API.Controllers;
 
+[Authorize]
 [ApiController]
 [Route("api/[controller]")]
 public class UserController : ControllerBase
@@ -16,6 +18,7 @@ public class UserController : ControllerBase
     }
 
     // GET /api/User/{id}
+    [AllowAnonymous]
     [HttpGet("{id}")]
     public ActionResult<User> GetUser([FromRoute] Guid id)
     {
@@ -28,6 +31,7 @@ public class UserController : ControllerBase
     }
 
     // GET /api/User
+    [AllowAnonymous]
     [HttpGet]
     public ActionResult<IEnumerable<User>> GetUsers()
     {
@@ -35,6 +39,7 @@ public class UserController : ControllerBase
     }
 
     // POST /api/User
+    [Authorize(Roles = "admin")]
     [HttpPost]
     public ActionResult Post([FromBody] User user)
     {
@@ -52,6 +57,7 @@ public class UserController : ControllerBase
     }
 
     // PUT /api/User
+    [Authorize(Roles = "admin")]
     [HttpPut]
     public ActionResult UpdateUser([FromBody] User user)
     {
@@ -75,6 +81,7 @@ public class UserController : ControllerBase
     }
 
     // DELETE /api/User/{id}
+    [Authorize(Roles = "admin")]
     [HttpDelete("{id}")]
     public ActionResult DeleteUser([FromRoute] Guid id)
     {

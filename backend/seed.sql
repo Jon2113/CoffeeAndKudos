@@ -4,7 +4,7 @@
 //Idempotent: drops existing tables before recreating
 //
 
-//0) Extension for gen_random_uuid()
+//0) Extension for gen_random_uuid() and pgcrypto for password hashing
 CREATE EXTENSION IF NOT EXISTS pgcrypto;
 
 //
@@ -17,12 +17,13 @@ DROP TABLE IF EXISTS users   CASCADE;
 //
 //2) TABLES
 
-
 //users 
 CREATE TABLE users (
   user_id        uuid        PRIMARY KEY,
   username       varchar     NOT NULL UNIQUE,
   email          varchar     NOT NULL UNIQUE,
+  password_hash  text        NOT NULL,                    -- ADDED
+  role           text        NOT NULL DEFAULT 'user',     -- ADDED
   created_at     timestamptz NOT NULL,
   count_lent     int4        NOT NULL,
   count_borrowed int4        NOT NULL,
@@ -61,19 +62,23 @@ CREATE INDEX idx_favors_debtor    ON public.favors  USING btree (debtor_id);
 
 //
 //4) SEED: USERS
-//Counters are set consistently via UPDATE at the end
+//All seed users get a default hashed password: Password123!    -- ADDED
 //
-INSERT INTO users (user_id, username, email, created_at, count_lent, count_borrowed, favors_given, favors_taken) VALUES
-  (gen_random_uuid(), 'Manuel Neuer',     'manuel.neuer@fcbayern.com',     NOW() - INTERVAL '90 days', 0, 0, 0, 0),
-  (gen_random_uuid(), 'Thomas Müller',    'thomas.mueller@fcbayern.com',   NOW() - INTERVAL '90 days', 0, 0, 0, 0),
-  (gen_random_uuid(), 'Joshua Kimmich',   'joshua.kimmich@fcbayern.com',   NOW() - INTERVAL '85 days', 0, 0, 0, 0),
-  (gen_random_uuid(), 'Harry Kane',       'harry.kane@fcbayern.com',       NOW() - INTERVAL '60 days', 0, 0, 0, 0),
-  (gen_random_uuid(), 'Leroy Sané',       'leroy.sane@fcbayern.com',       NOW() - INTERVAL '80 days', 0, 0, 0, 0),
-  (gen_random_uuid(), 'Jamal Musiala',    'jamal.musiala@fcbayern.com',    NOW() - INTERVAL '75 days', 0, 0, 0, 0),
-  (gen_random_uuid(), 'Alphonso Davies',  'alphonso.davies@fcbayern.com',  NOW() - INTERVAL '78 days', 0, 0, 0, 0),
-  (gen_random_uuid(), 'Leon Goretzka',    'leon.goretzka@fcbayern.com',    NOW() - INTERVAL '85 days', 0, 0, 0, 0),
-  (gen_random_uuid(), 'Serge Gnabry',     'serge.gnabry@fcbayern.com',     NOW() - INTERVAL '82 days', 0, 0, 0, 0),
-  (gen_random_uuid(), 'Kingsley Coman',   'kingsley.coman@fcbayern.com',   NOW() - INTERVAL '80 days', 0, 0, 0, 0);
+INSERT INTO users (user_id, username, email, password_hash, role, created_at, count_lent, count_borrowed, favors_given, favors_taken) VALUES
+  (gen_random_uuid(), 'Manuel Neuer',    'manuel.neuer@fcbayern.com',    crypt('Password123!', gen_salt('bf')), 'user', NOW() - INTERVAL '90 days', 0, 0, 0, 0),
+  (gen_random_uuid(), 'Thomas Müller',   'thomas.mueller@fcbayern.com',  crypt('Password123!', gen_salt('bf')), 'user', NOW() - INTERVAL '90 days', 0, 0, 0, 0),
+  (gen_random_uuid(), 'Joshua Kimmich',  'joshua.kimmich@fcbayern.com',  crypt('Password123!', gen_salt('bf')), 'user', NOW() - INTERVAL '85 days', 0, 0, 0, 0),
+  (gen_random_uuid(), 'Harry Kane',      'harry.kane@fcbayern.com',      crypt('Password123!', gen_salt('bf')), 'user', NOW() - INTERVAL '60 days', 0, 0, 0, 0),
+  (gen_random_uuid(), 'Leroy Sané',      'leroy.sane@fcbayern.com',      crypt('Password123!', gen_salt('bf')), 'user', NOW() - INTERVAL '80 days', 0, 0, 0, 0),
+  (gen_random_uuid(), 'Jamal Musiala',   'jamal.musiala@fcbayern.com',   crypt('Password123!', gen_salt('bf')), 'user', NOW() - INTERVAL '75 days', 0, 0, 0, 0),
+  (gen_random_uuid(), 'Alphonso Davies', 'alphonso.davies@fcbayern.com', crypt('Password123!', gen_salt('bf')), 'user', NOW() - INTERVAL '78 days', 0, 0, 0, 0),
+  (gen_random_uuid(), 'Leon Goretzka',   'leon.goretzka@fcbayern.com',   crypt('Password123!', gen_salt('bf')), 'user', NOW() - INTERVAL '85 days', 0, 0, 0, 0),
+  (gen_random_uuid(), 'Serge Gnabry',    'serge.gnabry@fcbayern.com',    crypt('Password123!', gen_salt('bf')), 'user', NOW() - INTERVAL '82 days', 0, 0, 0, 0),
+  (gen_random_uuid(), 'Kingsley Coman',  'kingsley.coman@fcbayern.com',  crypt('Password123!', gen_salt('bf')), 'user', NOW() - INTERVAL '80 days', 0, 0, 0, 0);
+
+//ADDED: Admin user
+INSERT INTO users (user_id, username, email, password_hash, role, created_at, count_lent, count_borrowed, favors_given, favors_taken) VALUES
+  (gen_random_uuid(), 'admin', 'admin@coffeeandkudos.com', crypt('Admin123!', gen_salt('bf')), 'admin', NOW(), 0, 0, 0, 0);
 
 //
 //5) SEED: FAVORS (Soft Debts)
@@ -119,7 +124,7 @@ INSERT INTO favors (favor_id, debtor_id, creditor_id, description, is_settled, c
    (SELECT user_id FROM users WHERE username = 'Jamal Musiala'),
    'Covered my round at the team dinner', false, NOW() - INTERVAL '6 days');
 
---
+//
 //6) SEED: BORROWS (Physical Items)
 //Mix of open / returned / overdue
 //
@@ -166,10 +171,6 @@ INSERT INTO borrows (borrow_id, lender_id, borrower_id, item_name, due_date, ret
 
 //
 //7) Set counters in users consistently
-//count_lent       = number of borrows as lender
-//count_borrowed   = number of borrows as borrower
-//favors_given     = number of favors as creditor (= favors done)
-//favors_taken     = number of favors as debtor   (= favors received)
 //
 UPDATE users u SET
   count_lent     = (SELECT COUNT(*) FROM borrows WHERE lender_id   = u.user_id),
