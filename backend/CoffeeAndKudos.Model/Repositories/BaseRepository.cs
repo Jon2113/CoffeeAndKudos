@@ -55,26 +55,22 @@ public class BaseRepository
         return cmd.ExecuteReader();
     }
 
-    // Opens the connection and executes a non-query command. Returns true unconditionally;
-    // row count and error details are not surfaced at this level.
+    // Opens the connection and executes a non-query command. Returns true if at least one row was affected.
     protected bool InsertData(NpgsqlConnection conn, NpgsqlCommand cmd)
     {
         conn.Open();
-        cmd.ExecuteNonQuery();
-        return true;
+        return cmd.ExecuteNonQuery() > 0;
     }
 
     protected bool UpdateData(NpgsqlConnection conn, NpgsqlCommand cmd)
     {
         conn.Open();
-        cmd.ExecuteNonQuery();
-        return true;
+        return cmd.ExecuteNonQuery() > 0;
     }
 
     protected bool DeleteData(NpgsqlConnection conn, NpgsqlCommand cmd)
     {
         conn.Open();
-        cmd.ExecuteNonQuery();
-        return true;
+        return cmd.ExecuteNonQuery() > 0;
     }
 }

@@ -320,6 +320,7 @@ export class CreateEntryComponent implements OnChanges {
     return new Date().toISOString().slice(0, 10);
   }
 
+  // Uses noon local time to avoid off-by-one date shifts caused by timezone offsets.
   private toIsoTimestamp(dateValue: string): string {
     return new Date(`${dateValue}T12:00:00`).toISOString();
   }

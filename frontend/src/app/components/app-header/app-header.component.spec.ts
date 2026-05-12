@@ -38,6 +38,6 @@ describe('AppHeaderComponent', () => {
 
   it('should render team names', () => {
     const nativeEl: HTMLElement = fixture.nativeElement;
-    expect(nativeEl.textContent).toContain('Schäfer');
+    expect(nativeEl.textContent).toContain('Plümpe, Peifer, Schäfer');
   });
 });

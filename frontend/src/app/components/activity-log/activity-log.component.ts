@@ -463,7 +463,7 @@ export class ActivityLogComponent implements OnChanges {
     return `${year}-${month}-${day}`;
   }
 
-  // Uses noon UTC to avoid off-by-one date shifts caused by timezone offsets.
+  // Uses noon local time to avoid off-by-one date shifts caused by timezone offsets.
   private toIsoTimestamp(dateValue: string): string {
     return new Date(`${dateValue}T12:00:00`).toISOString();
   }
