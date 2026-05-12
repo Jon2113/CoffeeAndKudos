@@ -221,7 +221,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
           : borrow.dueDate
             ? `Due on ${this.formatDate(borrow.dueDate)}`
             : 'Open',
-        directionText: isOutgoing ? 'You lent this to' : 'You borrowed this from',
+        directionText: isOutgoing ? 'You lent this' : 'You borrowed this',
         actionText: 'Mark as returned',
         accent: 'borrow' as const,
       };
@@ -243,7 +243,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
         dueDate: null,
         isCompleted: favor.isSettled,
         statusText: favor.isSettled ? 'Settled' : 'Open',
-        directionText: isOutgoing ? 'You did this favor for' : 'You received this favor from',
+        directionText: isOutgoing ? 'You did this favor' : 'You received this favor',
         actionText: 'Mark as settled',
         accent: 'favor' as const,
       };

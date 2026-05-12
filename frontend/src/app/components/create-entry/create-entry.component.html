@@ -101,7 +101,7 @@
       </div>
 
       <!-- Settle existing open favors alongside this new entry -->
-      @if (selectedUserIds.length > 0) {
+      @if (selectedUserIds.length > 0 && entryType === 'favor') {
         <div class="settle-section">
           <button type="button" class="ghost-button compact-button settle-toggle" (click)="toggleSettleSection()">
             {{ isSettleExpanded ? 'Hide' : '+ Also settle existing favors?' }}

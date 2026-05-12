@@ -105,6 +105,7 @@
       [class.borrow]="entry.accent === 'borrow'"
       [class.favor]="entry.accent === 'favor'"
       [class.is-complete]="entry.isCompleted"
+      [class.is-overdue]="isOverdue(entry)"
       [class.is-editing]="isEditing(entry.id)"
     >
       <div class="log-stripe"></div>
@@ -112,15 +113,17 @@
       <div class="log-main">
         <div class="log-topline">
           <span class="log-type">{{ entry.type | uppercase }}</span>
+          <span class="direction-chip" [class.outgoing]="entry.direction === 'outgoing'" [class.incoming]="entry.direction === 'incoming'">
+            {{ getDirectionLabel(entry) }}
+          </span>
           <span class="log-status">{{ entry.statusText }}</span>
         </div>
 
         <h3>{{ entry.title }}</h3>
-        <p>{{ entry.directionText }} {{ entry.counterpartyName }}</p>
+        <p>{{ entry.directionText }} <span class="direction-highlight">{{ getDirectionPreposition(entry) }} {{ entry.counterpartyName }}</span></p>
 
         <div class="log-meta">
           <span>{{ entry.createdAt | date: 'MMM d, y' }}</span>
-          <span *ngIf="entry.dueDate">Due: {{ entry.dueDate | date: 'MMM d, y' }}</span>
         </div>
 
         <!-- Inline edit form — visible only when edit mode is active and this entry is selected -->
@@ -158,21 +161,38 @@
         </section>
       </div>
 
-      <!-- Per-entry action buttons: complete, edit, delete (edit/delete only in edit mode) -->
+      <!-- Per-entry action buttons: complete/reopen, edit, delete (edit/delete only in edit mode) -->
       <div class="entry-actions">
+        <!-- Open entry: primary action to mark as returned or settled -->
         <button
+          *ngIf="!entry.isCompleted"
           type="button"
           class="ghost-button compact-button"
-          [disabled]="entry.isCompleted || busyEntryId === entry.id || isSavingEdit"
+          [disabled]="busyEntryId === entry.id || isSavingEdit"
           (click)="completeEntry(entry)"
         >
-          {{
-            busyEntryId === entry.id && busyAction === 'complete'
-              ? 'Saving…'
-              : entry.isCompleted
-                ? 'Completed'
-                : entry.actionText
-          }}
+          {{ busyEntryId === entry.id && busyAction === 'complete' ? 'Saving…' : entry.actionText }}
+        </button>
+
+        <!-- Completed, normal view: static indicator -->
+        <button
+          *ngIf="entry.isCompleted && !isEditMode"
+          type="button"
+          class="ghost-button compact-button"
+          disabled
+        >
+          Completed
+        </button>
+
+        <!-- Completed, edit mode: reopen to mark as open again (hidden once inline edit is open) -->
+        <button
+          *ngIf="entry.isCompleted && isEditMode && !isEditing(entry.id)"
+          type="button"
+          class="ghost-button compact-button"
+          [disabled]="busyEntryId === entry.id || isSavingEdit"
+          (click)="reopenEntry(entry)"
+        >
+          {{ busyEntryId === entry.id && busyAction === 'reopen' ? 'Reopening…' : 'Reopen' }}
         </button>
 
         <button

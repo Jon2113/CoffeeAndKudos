@@ -38,7 +38,7 @@ export class ActivityLogComponent implements OnChanges {
   @Output() clearScaleFilter = new EventEmitter<void>();
 
   busyEntryId = '';
-  busyAction: 'complete' | 'delete' | '' = '';
+  busyAction: 'complete' | 'reopen' | 'delete' | '' = '';
   pendingDeleteId = '';
   actionError = '';
   editError = '';
@@ -151,6 +151,34 @@ export class ActivityLogComponent implements OnChanges {
       },
       error: () => {
         this.actionError = 'Could not update entry. Please check that the API is reachable.';
+        this.busyEntryId = '';
+        this.busyAction = '';
+      },
+    });
+  }
+
+  reopenEntry(entry: ActivityEntry): void {
+    if (!entry.isCompleted || this.busyEntryId || this.isSavingEdit) {
+      return;
+    }
+
+    this.actionError = '';
+    this.busyEntryId = entry.id;
+    this.busyAction = 'reopen';
+
+    const request$ =
+      entry.type === 'borrow'
+        ? this.borrowService.reopenBorrow(entry.id)
+        : this.favorService.reopenFavor(entry.id);
+
+    request$.subscribe({
+      next: () => {
+        this.busyEntryId = '';
+        this.busyAction = '';
+        this.entryUpdated.emit();
+      },
+      error: () => {
+        this.actionError = 'Could not reopen entry. Please check that the API is reachable.';
         this.busyEntryId = '';
         this.busyAction = '';
       },
@@ -291,6 +319,29 @@ export class ActivityLogComponent implements OnChanges {
     return this.editingEntryId === entryId;
   }
 
+  isOverdue(entry: ActivityEntry): boolean {
+    return (
+      entry.type === 'borrow' &&
+      !entry.isCompleted &&
+      entry.dueDate !== null &&
+      new Date(entry.dueDate) < new Date()
+    );
+  }
+
+  getDirectionLabel(entry: ActivityEntry): string {
+    if (entry.type === 'borrow') {
+      return entry.direction === 'outgoing' ? 'Lent' : 'Borrowed';
+    }
+    return entry.direction === 'outgoing' ? 'Given' : 'Received';
+  }
+
+  getDirectionPreposition(entry: ActivityEntry): string {
+    if (entry.type === 'borrow') {
+      return entry.direction === 'outgoing' ? 'to' : 'from';
+    }
+    return entry.direction === 'outgoing' ? 'for' : 'from';
+  }
+
   trackByEntryId(_index: number, entry: ActivityEntry): string {
     return `${entry.type}-${entry.id}`;
   }
@@ -374,10 +425,14 @@ export class ActivityLogComponent implements OnChanges {
   }
 
   private applySort(entries: ActivityEntry[]): ActivityEntry[] {
+    const completionOrder = (e: ActivityEntry) => (e.isCompleted ? 1 : 0);
+
     switch (this.dateSort) {
       case 'oldest':
         return [...entries].sort(
-          (left, right) => new Date(left.createdAt).getTime() - new Date(right.createdAt).getTime(),
+          (left, right) =>
+            completionOrder(left) - completionOrder(right) ||
+            new Date(left.createdAt).getTime() - new Date(right.createdAt).getTime(),
         );
       case 'dueSoon':
         return [...entries].sort((left, right) => {
@@ -385,11 +440,13 @@ export class ActivityLogComponent implements OnChanges {
           const rightDue = right.dueDate
             ? new Date(right.dueDate).getTime()
             : Number.MAX_SAFE_INTEGER;
-          return leftDue - rightDue;
+          return completionOrder(left) - completionOrder(right) || leftDue - rightDue;
         });
       default:
         return [...entries].sort(
-          (left, right) => new Date(right.createdAt).getTime() - new Date(left.createdAt).getTime(),
+          (left, right) =>
+            completionOrder(left) - completionOrder(right) ||
+            new Date(right.createdAt).getTime() - new Date(left.createdAt).getTime(),
         );
     }
   }
