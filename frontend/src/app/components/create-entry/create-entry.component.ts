@@ -272,7 +272,6 @@ export class CreateEntryComponent implements OnChanges {
     this.prefetchedFavors = null;
     this.startFavorPrefetch();
   }
-
   // Fetch all current-user favors as soon as the panel opens so the settle list
   // is ready instantly when the user expands it instead of loading on demand.
   private startFavorPrefetch(): void {
@@ -283,7 +282,10 @@ export class CreateEntryComponent implements OnChanges {
           this.applySettleFilter();
         }
       },
-      error: () => {},
+      error: () => {
+        this.isLoadingSettleable = false;
+        this.prefetchedFavors = [];
+      },
     });
   }
 

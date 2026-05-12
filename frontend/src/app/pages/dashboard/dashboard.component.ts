@@ -1,4 +1,3 @@
-import { NgFor, NgIf } from '@angular/common';
 import { ChangeDetectorRef, Component, OnDestroy, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
@@ -20,7 +19,7 @@ import { UserService } from '../../services/user.service';
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [NgIf, NgFor, FormsModule, ScaleComponent, ActivityLogComponent, CreateEntryComponent],
+  imports: [FormsModule, ScaleComponent, ActivityLogComponent, CreateEntryComponent],
   templateUrl: './dashboard.component.html',
   styleUrls: ['./dashboard.component.css'],
 })

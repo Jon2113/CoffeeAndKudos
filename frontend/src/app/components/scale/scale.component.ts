@@ -1,4 +1,4 @@
-import { NgClass, NgFor } from '@angular/common';
+import { NgClass } from '@angular/common';
 import { Component, EventEmitter, Input, Output } from '@angular/core';
 
 import { ScaleFilterKey, ScaleStats } from '../../models/dashboard.model';
@@ -16,7 +16,7 @@ interface ScaleCardView {
 @Component({
   selector: 'app-scale',
   standalone: true,
-  imports: [NgFor, NgClass],
+  imports: [NgClass],
   templateUrl: './scale.component.html',
   styleUrls: ['./scale.component.css'],
 })

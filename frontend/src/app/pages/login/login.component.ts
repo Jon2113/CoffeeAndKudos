@@ -1,4 +1,5 @@
-import { NgFor, NgIf, UpperCasePipe } from '@angular/common';
+import { UpperCasePipe } from '@angular/common';
+
 import { ChangeDetectorRef, Component, OnDestroy, OnInit } from '@angular/core';
 import { FormControl, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
@@ -25,7 +26,7 @@ interface UserCardMetrics {
 @Component({
   selector: 'app-login',
   standalone: true,
-  imports: [NgIf, NgFor, FormsModule, ReactiveFormsModule, UpperCasePipe, MatFormFieldModule, MatInputModule, MatButtonModule],
+  imports: [FormsModule, ReactiveFormsModule, UpperCasePipe, MatFormFieldModule, MatInputModule, MatButtonModule],
   templateUrl: './login.component.html',
   styleUrls: ['./login.component.css'],
 })

@@ -6,146 +6,173 @@
       <p>Select a profile below and we'll open your personal dashboard right away.</p>
     </div>
 
-    <section *ngIf="isLoading" class="loading-card">
-      <div class="spinner"></div>
-      <div>
-        <p class="eyebrow">One moment</p>
-        <h2>Loading profiles…</h2>
-      </div>
-    </section>
-
-    <p *ngIf="errorMessage" class="status-banner error">{{ errorMessage }}</p>
-
-    <div *ngIf="!isLoading && !errorMessage && users.length > 0" class="user-grid">
-      <!-- Clicking the card opens the dashboard for that user -->
-      <article
-        *ngFor="let user of users; trackBy: trackByUserId"
-        class="user-card"
-        (click)="selectUser(user.userId)"
-      >
-        <span class="user-avatar">{{ user.username.charAt(0) | uppercase }}</span>
-
-        <div class="user-copy">
-          <h2>{{ user.username }}</h2>
-          <p>{{ user.email || 'No email provided' }}</p>
-        </div>
-
-        <div class="user-metrics">
-          <span>{{ getMetrics(user.userId).countLent }} lent</span>
-          <span>{{ getMetrics(user.userId).favorsGiven }} favors given</span>
-        </div>
-        <!-- Stop propagation so Edit/Delete don't also trigger card navigation -->
-        <div class="user-actions" (click)="$event.stopPropagation()">
-          <button
-            type="button"
-            class="ghost-button compact-button"
-            [disabled]="isSavingUserChanges || !!busyDeleteUserId"
-            (click)="startUserEdit(user)"
-          >
-            Edit
-          </button>
-
-          <ng-container *ngIf="pendingDeleteUserId !== user.userId">
-            <button
-              type="button"
-              class="danger-button compact-button"
-              [disabled]="isSavingUserChanges || busyDeleteUserId === user.userId"
-              (click)="deleteUser(user)"
-            >
-              {{ busyDeleteUserId === user.userId ? 'Deleting…' : 'Delete' }}
-            </button>
-          </ng-container>
-
-          <ng-container *ngIf="pendingDeleteUserId === user.userId">
-            <span class="delete-confirm-label">Remove "{{ user.username }}"?</span>
-            <button type="button" class="danger-button compact-button" (click)="confirmDeleteUser(user)">Yes, remove</button>
-            <button type="button" class="ghost-button compact-button" (click)="cancelDeleteUser()">Cancel</button>
-          </ng-container>
-        </div>
-
-        <!-- Inline edit form — also blocked from triggering card navigation -->
-        <section *ngIf="isEditingUser(user.userId)" class="edit-user-form" (click)="$event.stopPropagation()">
-          <label class="field-stack">
-            <span>Username</span>
-            <input
-              type="text"
-              [(ngModel)]="editUsername"
-              [name]="'editUsername-' + user.userId"
-            >
-          </label>
-
-          <label class="field-stack">
-            <span>Email</span>
-            <input
-              type="email"
-              [(ngModel)]="editEmail"
-              [name]="'editEmail-' + user.userId"
-            >
-          </label>
-
-          <div class="edit-user-actions">
-            <button
-              type="button"
-              class="primary-button compact-button"
-              [disabled]="!canSaveUserEdit || editingUserId !== user.userId"
-              (click)="saveUserEdit(user)"
-            >
-              {{ isSavingUserChanges ? 'Saving…' : 'Save' }}
-            </button>
-            <button
-              type="button"
-              class="ghost-button compact-button"
-              [disabled]="isSavingUserChanges"
-              (click)="cancelUserEdit()"
-            >
-              Cancel
-            </button>
-          </div>
-        </section>
-      </article>
-    </div>
-
-    <p *ngIf="manageErrorMessage" class="status-banner error">{{ manageErrorMessage }}</p>
-    <p *ngIf="manageInfoMessage" class="status-banner success">{{ manageInfoMessage }}</p>
-
-    <section *ngIf="!isLoading && !errorMessage" class="create-user-panel">
-      <div class="create-user-header">
+    @if (isLoading) {
+      <section class="loading-card">
+        <div class="spinner"></div>
         <div>
-          <p class="eyebrow">New Profile</p>
-          <h2>Add a profile</h2>
+          <p class="eyebrow">One moment</p>
+          <h2>Loading profiles…</h2>
         </div>
-        <button type="button" class="ghost-button" (click)="toggleCreatePanel()">
-          {{ isCreatePanelOpen ? 'Hide' : 'Add profile' }}
-        </button>
+      </section>
+    }
+
+    @if (errorMessage) {
+      <p class="status-banner error">{{ errorMessage }}</p>
+    }
+
+    @if (!isLoading && !errorMessage && users.length > 0) {
+      <div class="user-grid">
+        <!-- Clicking the card opens the dashboard for that user -->
+        @for (user of users; track trackByUserId($index, user)) {
+          <article class="user-card" (click)="selectUser(user.userId)">
+            <span class="user-avatar">{{ user.username.charAt(0) | uppercase }}</span>
+
+            <div class="user-copy">
+              <h2>{{ user.username }}</h2>
+              <p>{{ user.email || 'No email provided' }}</p>
+            </div>
+
+            <div class="user-metrics">
+              <span>{{ getMetrics(user.userId).countLent }} lent</span>
+              <span>{{ getMetrics(user.userId).favorsGiven }} favors given</span>
+            </div>
+
+            <!-- Stop propagation so Edit/Delete don't also trigger card navigation -->
+            <div class="user-actions" (click)="$event.stopPropagation()">
+              <button
+                type="button"
+                class="ghost-button compact-button"
+                [disabled]="isSavingUserChanges || !!busyDeleteUserId"
+                (click)="startUserEdit(user)"
+              >
+                Edit
+              </button>
+
+              @if (pendingDeleteUserId !== user.userId) {
+                <button
+                  type="button"
+                  class="danger-button compact-button"
+                  [disabled]="isSavingUserChanges || busyDeleteUserId === user.userId"
+                  (click)="deleteUser(user)"
+                >
+                  {{ busyDeleteUserId === user.userId ? 'Deleting…' : 'Delete' }}
+                </button>
+              }
+
+              @if (pendingDeleteUserId === user.userId) {
+                <span class="delete-confirm-label">Remove "{{ user.username }}"?</span>
+                <button type="button" class="danger-button compact-button" (click)="confirmDeleteUser(user)">Yes, remove</button>
+                <button type="button" class="ghost-button compact-button" (click)="cancelDeleteUser()">Cancel</button>
+              }
+            </div>
+
+            <!-- Inline edit form — also blocked from triggering card navigation -->
+            @if (isEditingUser(user.userId)) {
+              <section class="edit-user-form" (click)="$event.stopPropagation()">
+                <label class="field-stack">
+                  <span>Username</span>
+                  <input
+                    type="text"
+                    [(ngModel)]="editUsername"
+                    [name]="'editUsername-' + user.userId"
+                  >
+                </label>
+
+                <label class="field-stack">
+                  <span>Email</span>
+                  <input
+                    type="email"
+                    [(ngModel)]="editEmail"
+                    [name]="'editEmail-' + user.userId"
+                  >
+                </label>
+
+                <div class="edit-user-actions">
+                  <button
+                    type="button"
+                    class="primary-button compact-button"
+                    [disabled]="!canSaveUserEdit || editingUserId !== user.userId"
+                    (click)="saveUserEdit(user)"
+                  >
+                    {{ isSavingUserChanges ? 'Saving…' : 'Save' }}
+                  </button>
+                  <button
+                    type="button"
+                    class="ghost-button compact-button"
+                    [disabled]="isSavingUserChanges"
+                    (click)="cancelUserEdit()"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </section>
+            }
+          </article>
+        }
       </div>
+    }
 
-      <form *ngIf="isCreatePanelOpen" [formGroup]="createForm" class="create-user-form" (ngSubmit)="createUser()">
-        <mat-form-field appearance="outline" class="mat-full-width">
-          <mat-label>Username</mat-label>
-          <input matInput formControlName="username" placeholder="e.g. Diba">
-          <mat-error *ngIf="createForm.get('username')?.hasError('required')">Username is required</mat-error>
-        </mat-form-field>
+    @if (manageErrorMessage) {
+      <p class="status-banner error">{{ manageErrorMessage }}</p>
+    }
+    @if (manageInfoMessage) {
+      <p class="status-banner success">{{ manageInfoMessage }}</p>
+    }
 
-        <mat-form-field appearance="outline" class="mat-full-width">
-          <mat-label>Email</mat-label>
-          <input matInput type="email" formControlName="email" placeholder="name@example.com">
-          <mat-error *ngIf="createForm.get('email')?.hasError('required')">Email is required</mat-error>
-          <mat-error *ngIf="createForm.get('email')?.hasError('email')">Enter a valid email address</mat-error>
-        </mat-form-field>
+    @if (!isLoading && !errorMessage) {
+      <section class="create-user-panel">
+        <div class="create-user-header">
+          <div>
+            <p class="eyebrow">New Profile</p>
+            <h2>Add a profile</h2>
+          </div>
+          <button type="button" class="ghost-button" (click)="toggleCreatePanel()">
+            {{ isCreatePanelOpen ? 'Hide' : 'Add profile' }}
+          </button>
+        </div>
 
-        <p *ngIf="createErrorMessage" class="status-banner error">{{ createErrorMessage }}</p>
-        <p *ngIf="createInfoMessage" class="status-banner success">{{ createInfoMessage }}</p>
+        @if (isCreatePanelOpen) {
+          <form [formGroup]="createForm" class="create-user-form" (ngSubmit)="createUser()">
+            <mat-form-field appearance="outline" class="mat-full-width">
+              <mat-label>Username</mat-label>
+              <input matInput formControlName="username" placeholder="e.g. Diba">
+              @if (createForm.get('username')?.hasError('required')) {
+                <mat-error>Username is required</mat-error>
+              }
+            </mat-form-field>
 
-        <button type="submit" class="primary-button" [disabled]="!canCreateUser">
-          {{ isCreatingUser ? 'Creating…' : 'Create profile' }}
-        </button>
-      </form>
-    </section>
+            <mat-form-field appearance="outline" class="mat-full-width">
+              <mat-label>Email</mat-label>
+              <input matInput type="email" formControlName="email" placeholder="name@example.com">
+              @if (createForm.get('email')?.hasError('required')) {
+                <mat-error>Email is required</mat-error>
+              }
+              @if (createForm.get('email')?.hasError('email')) {
+                <mat-error>Enter a valid email address</mat-error>
+              }
+            </mat-form-field>
 
-    <section *ngIf="!isLoading && !errorMessage && users.length === 0" class="empty-panel">
-      <p class="eyebrow">Empty</p>
-      <h2>No profiles yet.</h2>
-      <p>Create a profile using the form above — it'll appear here right away.</p>
-    </section>
+            @if (createErrorMessage) {
+              <p class="status-banner error">{{ createErrorMessage }}</p>
+            }
+            @if (createInfoMessage) {
+              <p class="status-banner success">{{ createInfoMessage }}</p>
+            }
+
+            <button type="submit" class="primary-button" [disabled]="!canCreateUser">
+              {{ isCreatingUser ? 'Creating…' : 'Create profile' }}
+            </button>
+          </form>
+        }
+      </section>
+    }
+
+    @if (!isLoading && !errorMessage && users.length === 0) {
+      <section class="empty-panel">
+        <p class="eyebrow">Empty</p>
+        <h2>No profiles yet.</h2>
+        <p>Create a profile using the form above — it'll appear here right away.</p>
+      </section>
+    }
   </section>
 </div>
