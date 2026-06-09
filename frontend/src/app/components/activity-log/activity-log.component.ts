@@ -1,7 +1,6 @@
 import { DatePipe, UpperCasePipe } from '@angular/common';
 import { Component, EventEmitter, Input, OnChanges, Output, SimpleChanges } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-
 import { ActivityEntry, ScaleFilterKey } from '../../models/dashboard.model';
 import { BorrowService } from '../../services/borrow.service';
 import { FavorService } from '../../services/favor.service';

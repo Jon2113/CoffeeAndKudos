@@ -70,11 +70,12 @@ export class DashboardComponent implements OnInit, OnDestroy {
     this.currentUserId = currentUserId;
     this.refreshDashboard();
   }
-
+// find the current user
   get selectedOtherUserName(): string {
     return this.otherUsers.find((user) => user.userId === this.selectedOtherUserId)?.username ?? '';
   }
 
+  
   get viewDescription(): string {
     return this.selectedOtherUserName
       ? `Showing only the history between you and ${this.selectedOtherUserName}.`
